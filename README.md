@@ -18,48 +18,48 @@ fmt.Print(resp.Choices[0].Text)
 
 ### Full Examples
 
-Try out any of these examples with putting the contents in a `main.go` and running `go run main.go`
+Try out any of these examples with putting the contents in a `main.go` and running `GO111MODULE=on go run main.go`.
+You will also need to have a `.env` file that looks like:
 
-```go
-package main
-
-import (
-    "fmt"
-    "github.com/PullRequestInc/go-gpt3"
-)
-
-ctx := context.Background()
-client := gpt3.NewClient(apiKey)
-
-resp, err := client.Completion(ctx, gpt3.CompletionRequest{
-    Prompt: []string{`
-go:golang
-py:python
-js:`},
-	MaxTokens: gpt3.IntPtr(20),
-})
+```
+API_KEY=<openAI API Key>
 ```
 
 ```go
 package main
 
 import (
-    "fmt"
-    "github.com/PullRequestInc/go-gpt3"
+	"context"
+	"fmt"
+	"log"
+	"os"
+
+	"github.com/PullRequestInc/go-gpt3"
+	"github.com/joho/godotenv"
 )
 
-ctx := context.Background()
-client := gpt3.NewClient(apiKey)
+func main() {
+	godotenv.Load()
 
-resp, err := client.Completion(ctx, gpt3.CompletionRequest{
-    Prompt: []string{`
-There are several things you should know about PullRequest.
+	apiKey := os.Getenv("API_KEY")
+	if apiKey == "" {
+		log.Fatalln("Missing API KEY")
+	}
 
-1. PullRequest provides external code review as a service for all languages.
-2. If you are new to Go, check out our blog posts like https://www.pullrequest.com/blog/unit-testing-in-go.
-3.`},
-    Stop: []string{"\n"},
-})
+	ctx := context.Background()
+	client := gpt3.NewClient(apiKey)
+
+	resp, err := client.Completion(ctx, gpt3.CompletionRequest{
+		Prompt:    []string{"The first thing you should know about javascript is"},
+		MaxTokens: gpt3.IntPtr(30),
+		Stop:      []string{"."},
+		Echo:      true,
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
+	fmt.Println(resp.Choices[0].Text)
+}
 ```
 
 ## Support
