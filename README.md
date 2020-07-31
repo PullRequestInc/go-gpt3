@@ -2,6 +2,8 @@
 
 A OpenAPI GPT-3 API client enabling Go/Golang programs to interact with the gpt3 APIs.
 
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/PullRequestInc/go-gpt3)](https://pkg.go.dev/github.com/PullRequestInc/go-gpt3)
+
 ## Usage
 
 Simple usage to call the main gpt-3 API, completion:
@@ -70,3 +72,7 @@ func main() {
 - [x] Document Search API
 - [x] Overriding default url, user-agent, timeout, and other options
 - [ ] TODO: Streaming on the Completion API
+
+## Powered by
+
+[<img src="https://www.pullrequest.com/images/pullrequest-logo.svg" width="200">](https://www.pullrequest.com)
