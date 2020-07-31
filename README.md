@@ -1,6 +1,6 @@
 # go-gpt3
 
-A OpenAPI GPT-3 API client enabling Go/Golang programs to interact with the gpt3 APIs.
+An OpenAPI GPT-3 API client enabling Go/Golang programs to interact with the gpt3 APIs.
 
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/PullRequestInc/go-gpt3)](https://pkg.go.dev/github.com/PullRequestInc/go-gpt3)
 
