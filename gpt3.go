@@ -34,11 +34,26 @@ type Client interface {
 	// Engines lists the currently available engines, and provides basic information about each
 	// option such as the owner and availability.
 	Engines(ctx context.Context) (*EnginesResponse, error)
+
 	// Engine retrieves an engine instance, providing basic information about the engine such
 	// as the owner and availability.
 	Engine(ctx context.Context, engine string) (*EngineObject, error)
-	// Search performs a semantic search over a list of documents.
-	Search(ctx context.Context, engine string, request SearchRequest) (*SearchResponse, error)
+
+	// Completion creates a completion with the default engine. This is the main endpoint of the API.
+	// Returns new text as well as, if requested, the probabilities over each alternative token at
+	// each position.
+	Completion(ctx context.Context, request CompletionRequest) (*CompletionResponse, error)
+
+	// CompletionWithEngine creates a completion with the specified engine. This is the main endpoint
+	// of the API. Returns new text as well as, if requested, the probabilities over each alternative
+	// token at each position.
+	CompletionWithEngine(ctx context.Context, engine string, request CompletionRequest) (*CompletionResponse, error)
+
+	// Search performs a semantic search over a list of documents with the default engine.
+	Search(ctx context.Context, request SearchRequest) (*SearchResponse, error)
+
+	// SearchWithEngine performs a semantic search over a list of documents with the specified engine.
+	SearchWithEngine(ctx context.Context, engine string, request SearchRequest) (*SearchResponse, error)
 }
 
 type client struct {
@@ -100,11 +115,12 @@ func (c *client) Engine(ctx context.Context, engine string) (*EngineObject, erro
 	return output, nil
 }
 
-func (c *client) Completion(ctx context.Context, engine string, request CompletionRequest) (*CompletionResponse, error) {
-	if engine == "" {
-		engine = DefaultEngine
-	}
-	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("/engines/%s/search", engine), request)
+func (c *client) Completion(ctx context.Context, request CompletionRequest) (*CompletionResponse, error) {
+	return c.CompletionWithEngine(ctx, c.defaultEngine, request)
+}
+
+func (c *client) CompletionWithEngine(ctx context.Context, engine string, request CompletionRequest) (*CompletionResponse, error) {
+	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("/engines/%s/completions", engine), request)
 	if err != nil {
 		return nil, err
 	}
@@ -112,17 +128,18 @@ func (c *client) Completion(ctx context.Context, engine string, request Completi
 	if err != nil {
 		return nil, err
 	}
-	output := new(SearchResponse)
+	output := new(CompletionResponse)
 	if err := getResponseObject(resp, output); err != nil {
 		return nil, err
 	}
 	return output, nil
 }
 
-func (c *client) Search(ctx context.Context, engine string, request SearchRequest) (*SearchResponse, error) {
-	if engine == "" {
-		engine = DefaultEngine
-	}
+func (c *client) Search(ctx context.Context, request SearchRequest) (*SearchResponse, error) {
+	return c.SearchWithEngine(ctx, c.defaultEngine, request)
+}
+
+func (c *client) SearchWithEngine(ctx context.Context, engine string, request SearchRequest) (*SearchResponse, error) {
 	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("/engines/%s/search", engine), request)
 	if err != nil {
 		return nil, err
@@ -167,9 +184,3 @@ func (c *client) newRequest(ctx context.Context, method, path string, payload in
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.apiKey))
 	return req, nil
 }
-
-// client := http.Client{
-// 	Timeout: time.Duration(15 * time.Second),
-// }
-
-// request, err := http.NewRequestWithContext(ctx, "POST", "https://api.openai.com/v1/engines/davinci/completions", bytes.NewBuffer(body))
