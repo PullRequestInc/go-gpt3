@@ -22,8 +22,11 @@ fmt.Print(resp.Choices[0].Text)
 
 ### Full Examples
 
-Try out any of these examples with putting the contents in a `main.go` and running `GO111MODULE=on go run main.go`.
-You will also need to have a `.env` file that looks like:
+Try out any of these examples with putting the contents in a `main.go` and running `go run main.go`.
+I would recommend using go modules in which case you will also need to run `go mod init` within your
+test repo. Alternatively you can clone this repo and run the test script with `go run cmd/test/main.go`.
+
+You will also need to have a `.env` file that looks like this to use these examples:
 
 ```
 API_KEY=<openAI API Key>
