@@ -1,6 +1,7 @@
 package gpt3
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -39,15 +40,19 @@ type Client interface {
 	// as the owner and availability.
 	Engine(ctx context.Context, engine string) (*EngineObject, error)
 
-	// Completion creates a completion with the default engine. This is the main endpoint of the API.
-	// Returns new text as well as, if requested, the probabilities over each alternative token at
-	// each position.
+	// Completion creates a completion with the default engine. This is the main endpoint of the API
+	// which auto-completes based on the given prompt.
 	Completion(ctx context.Context, request CompletionRequest) (*CompletionResponse, error)
 
-	// CompletionWithEngine creates a completion with the specified engine. This is the main endpoint
-	// of the API. Returns new text as well as, if requested, the probabilities over each alternative
-	// token at each position.
+	// CompletionStream creates a completion with the default engine and streams the results through
+	// multiple calls to onData.
+	CompletionStream(ctx context.Context, request CompletionRequest, onData func(*CompletionResponse)) error
+
+	// CompletionWithEngine is the same as Completion except allows overriding the default engine on the client
 	CompletionWithEngine(ctx context.Context, engine string, request CompletionRequest) (*CompletionResponse, error)
+
+	// CompletionStreamWithEngine is the same as CompletionStream except allows overriding the default engine on the client
+	CompletionStreamWithEngine(ctx context.Context, engine string, request CompletionRequest, onData func(*CompletionResponse)) error
 
 	// Search performs a semantic search over a list of documents with the default engine.
 	Search(ctx context.Context, request SearchRequest) (*SearchResponse, error)
@@ -120,6 +125,7 @@ func (c *client) Completion(ctx context.Context, request CompletionRequest) (*Co
 }
 
 func (c *client) CompletionWithEngine(ctx context.Context, engine string, request CompletionRequest) (*CompletionResponse, error) {
+	request.Stream = false
 	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("/engines/%s/completions", engine), request)
 	if err != nil {
 		return nil, err
@@ -133,6 +139,59 @@ func (c *client) CompletionWithEngine(ctx context.Context, engine string, reques
 		return nil, err
 	}
 	return output, nil
+}
+
+func (c *client) CompletionStream(ctx context.Context, request CompletionRequest, onData func(*CompletionResponse)) error {
+	return c.CompletionStreamWithEngine(ctx, c.defaultEngine, request, onData)
+}
+
+var dataPrefix = []byte("data: ")
+var doneSequence = []byte("[DONE]")
+
+func (c *client) CompletionStreamWithEngine(
+	ctx context.Context,
+	engine string,
+	request CompletionRequest,
+	onData func(*CompletionResponse),
+) error {
+	request.Stream = true
+	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("/engines/%s/completions", engine), request)
+	if err != nil {
+		return nil
+	}
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil
+	}
+
+	reader := bufio.NewReader(resp.Body)
+	defer resp.Body.Close()
+
+	for {
+		line, err := reader.ReadBytes('\n')
+		if err != nil {
+			return err
+		}
+		// make sure there isn't any extra whitespace before or after
+		line = bytes.TrimSpace(line)
+		// the completion API only returns data events
+		if !bytes.HasPrefix(line, dataPrefix) {
+			continue
+		}
+		line = bytes.TrimPrefix(line, dataPrefix)
+
+		// the stream is completed when terminated by [DONE]
+		if bytes.HasPrefix(line, doneSequence) {
+			break
+		}
+		output := new(CompletionResponse)
+		if err := json.Unmarshal(line, output); err != nil {
+			return fmt.Errorf("invalid json stream data: %v", err)
+		}
+		onData(output)
+	}
+
+	return nil
 }
 
 func (c *client) Search(ctx context.Context, request SearchRequest) (*SearchResponse, error) {

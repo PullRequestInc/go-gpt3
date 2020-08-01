@@ -1,6 +1,8 @@
 # go-gpt3
 
-A OpenAPI GPT-3 API client enabling Go/Golang programs to interact with the gpt3 APIs.
+An OpenAPI GPT-3 API client enabling Go/Golang programs to interact with the gpt3 APIs.
+
+Supports using the completion APIs with or without streaming.
 
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/PullRequestInc/go-gpt3)](https://pkg.go.dev/github.com/PullRequestInc/go-gpt3)
 
@@ -69,9 +71,9 @@ func main() {
 - [x] List Engines API
 - [x] Get Engine API
 - [x] Completion API (this is the main gpt-3 API)
+- [x] Streaming support for the Completion API
 - [x] Document Search API
 - [x] Overriding default url, user-agent, timeout, and other options
-- [ ] TODO: Streaming on the Completion API
 
 ## Powered by
 

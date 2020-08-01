@@ -40,9 +40,9 @@ type CompletionRequest struct {
 	// FrequencyPenalty number between 0 and 1 that penalizes tokens on existing frequency in the text so far.
 	FrequencyPenalty float32 `json:"presence_penalty"`
 
-	// TODO add streaming support
-	// Whether to stream back results or not. Do not set this yourself, call the stream API
-	// Stream bool     `json:"stream,omitempty"`
+	// Whether to stream back results or not. Don't set this value in the request yourself
+	// as it will be overriden depending on if you use CompletionStream or Completion methods.
+	Stream bool `json:"stream,omitempty"`
 }
 
 // CompletionResponseChoice is one of the choices returned in the response to the Completions API

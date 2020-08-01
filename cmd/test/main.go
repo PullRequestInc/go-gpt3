@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 
@@ -40,5 +41,20 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	log.Printf("%+v\n", resp)
+
+	fmt.Print("\n\nstarting stream:\n")
+
+	request := gpt3.CompletionRequest{
+		Prompt: []string{
+			"One thing that you should know about golang",
+		},
+		MaxTokens: gpt3.IntPtr(20),
+	}
+
+	err = client.CompletionStream(ctx, request, func(resp *gpt3.CompletionResponse) {
+		fmt.Println(resp.Choices[0].Text)
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
