@@ -20,6 +20,10 @@ fmt.Print(resp.Choices[0].Text)
 // prints " 13, 17, 19, 23, 29, 31", etc
 ```
 
+## Documentation
+
+Check out the go docs for more detailed documentation on the types and methods provided: https://pkg.go.dev/github.com/PullRequestInc/go-gpt3
+
 ### Full Examples
 
 Try out any of these examples with putting the contents in a `main.go` and running `go run main.go`.
