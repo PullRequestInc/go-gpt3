@@ -11,9 +11,6 @@ import (
 	"time"
 )
 
-// external interfaces:
-// go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Client
-
 // Engine Types
 const (
 	AdaEngine     = "ada"
@@ -219,7 +216,10 @@ func (c *client) SearchWithEngine(ctx context.Context, engine string, request Se
 
 func getResponseObject(rsp *http.Response, v interface{}) error {
 	defer rsp.Body.Close()
-	return json.NewDecoder(rsp.Body).Decode(v)
+	if err := json.NewDecoder(rsp.Body).Decode(v); err != nil {
+		return fmt.Errorf("invalid json response: %w", err)
+	}
+	return nil
 }
 
 func jsonBodyReader(body interface{}) (io.Reader, error) {

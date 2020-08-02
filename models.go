@@ -38,7 +38,7 @@ type CompletionRequest struct {
 	// PresencePenalty number between 0 and 1 that penalizes tokens that have already appeared in the text so far.
 	PresencePenalty float32 `json:"presence_penalty"`
 	// FrequencyPenalty number between 0 and 1 that penalizes tokens on existing frequency in the text so far.
-	FrequencyPenalty float32 `json:"presence_penalty"`
+	FrequencyPenalty float32 `json:"frequency_penalty"`
 
 	// Whether to stream back results or not. Don't set this value in the request yourself
 	// as it will be overriden depending on if you use CompletionStream or Completion methods.
