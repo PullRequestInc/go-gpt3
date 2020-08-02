@@ -11,6 +11,9 @@ import (
 	"time"
 )
 
+// external interfaces:
+// go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Client
+
 // Engine Types
 const (
 	AdaEngine     = "ada"
