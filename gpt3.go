@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"time"
 )
@@ -93,10 +94,11 @@ func (c *client) Engines(ctx context.Context) (*EnginesResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.performRequest(req)
 	if err != nil {
 		return nil, err
 	}
+
 	output := new(EnginesResponse)
 	if err := getResponseObject(resp, output); err != nil {
 		return nil, err
@@ -109,10 +111,11 @@ func (c *client) Engine(ctx context.Context, engine string) (*EngineObject, erro
 	if err != nil {
 		return nil, err
 	}
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.performRequest(req)
 	if err != nil {
 		return nil, err
 	}
+
 	output := new(EngineObject)
 	if err := getResponseObject(resp, output); err != nil {
 		return nil, err
@@ -130,10 +133,11 @@ func (c *client) CompletionWithEngine(ctx context.Context, engine string, reques
 	if err != nil {
 		return nil, err
 	}
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.performRequest(req)
 	if err != nil {
 		return nil, err
 	}
+
 	output := new(CompletionResponse)
 	if err := getResponseObject(resp, output); err != nil {
 		return nil, err
@@ -157,11 +161,11 @@ func (c *client) CompletionStreamWithEngine(
 	request.Stream = true
 	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("/engines/%s/completions", engine), request)
 	if err != nil {
-		return nil
+		return err
 	}
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.performRequest(req)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	reader := bufio.NewReader(resp.Body)
@@ -203,7 +207,7 @@ func (c *client) SearchWithEngine(ctx context.Context, engine string, request Se
 	if err != nil {
 		return nil, err
 	}
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.performRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -212,6 +216,41 @@ func (c *client) SearchWithEngine(ctx context.Context, engine string, request Se
 		return nil, err
 	}
 	return output, nil
+}
+
+func (c *client) performRequest(req *http.Request) (*http.Response, error) {
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	if err := checkForSuccess(resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+// returns an error if this response includes an error.
+func checkForSuccess(resp *http.Response) error {
+	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+		return nil
+	}
+	defer resp.Body.Close()
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read from body: %w", err)
+	}
+	var result APIErrorResponse
+	if err := json.Unmarshal(data, &result); err != nil {
+		// if we can't decode the json error then create an unexpected error
+		apiError := APIError{
+			StatusCode: resp.StatusCode,
+			Type:       "Unexpected",
+			Message:    string(data),
+		}
+		return &apiError
+	}
+	result.Error.StatusCode = resp.StatusCode
+	return &result.Error
 }
 
 func getResponseObject(rsp *http.Response, v interface{}) error {
