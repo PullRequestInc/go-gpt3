@@ -90,7 +90,7 @@ type SearchRequest struct {
 // SearchData is a single search result from the document search API
 type SearchData struct {
 	Document int     `json:"document"`
-	Object   string  `json:"search_resulet"`
+	Object   string  `json:"object"`
 	Score    float64 `json:"score"`
 }
 

@@ -118,15 +118,15 @@ func (errReader) Read(p []byte) (n int, err error) {
 	return 0, errors.New("read error")
 }
 
-func TestResponseBadStatusCode(t *testing.T) {
+func TestResponses(t *testing.T) {
 	ctx := context.Background()
 	rt, httpClient := fakeHttpClient()
 	client := gpt3.NewClient("test-key", gpt3.WithHTTPClient(httpClient))
 
 	type testCase struct {
-		name        string
-		apiCall     func() (interface{}, error)
-		errorString string
+		name           string
+		apiCall        func() (interface{}, error)
+		responseObject interface{}
 	}
 
 	testCases := []testCase{
@@ -135,21 +135,46 @@ func TestResponseBadStatusCode(t *testing.T) {
 			func() (interface{}, error) {
 				return client.Engines(ctx)
 			},
-			"Get https://api.openai.com/v1/engines: request error",
+			&gpt3.EnginesResponse{
+				Data: []gpt3.EngineObject{
+					gpt3.EngineObject{
+						ID:     "123",
+						Object: "list",
+						Owner:  "owner",
+						Ready:  true,
+					},
+				},
+			},
 		},
 		{
 			"Engine",
 			func() (interface{}, error) {
 				return client.Engine(ctx, gpt3.DefaultEngine)
 			},
-			"Get https://api.openai.com/v1/engines/davinci: request error",
+			&gpt3.EngineObject{
+				ID:     "123",
+				Object: "list",
+				Owner:  "owner",
+				Ready:  true,
+			},
 		},
 		{
 			"Completion",
 			func() (interface{}, error) {
 				return client.Completion(ctx, gpt3.CompletionRequest{})
 			},
-			"Post https://api.openai.com/v1/engines/davinci/completions: request error",
+			&gpt3.CompletionResponse{
+				ID:      "123",
+				Object:  "list",
+				Created: 123456789,
+				Model:   "davinci-12",
+				Choices: []gpt3.CompletionResponseChoice{
+					gpt3.CompletionResponseChoice{
+						Text:         "output",
+						FinishReason: "stop",
+					},
+				},
+			},
 		}, {
 			"CompletionStream",
 			func() (interface{}, error) {
@@ -159,13 +184,24 @@ func TestResponseBadStatusCode(t *testing.T) {
 				}
 				return rsp, client.CompletionStream(ctx, gpt3.CompletionRequest{}, onData)
 			},
-			"Post https://api.openai.com/v1/engines/davinci/completions: request error",
+			nil, // streaming responses are tested separately
 		}, {
 			"CompletionWithEngine",
 			func() (interface{}, error) {
 				return client.CompletionWithEngine(ctx, gpt3.AdaEngine, gpt3.CompletionRequest{})
 			},
-			"Post https://api.openai.com/v1/engines/ada/completions: request error",
+			&gpt3.CompletionResponse{
+				ID:      "123",
+				Object:  "list",
+				Created: 123456789,
+				Model:   "davinci-12",
+				Choices: []gpt3.CompletionResponseChoice{
+					gpt3.CompletionResponseChoice{
+						Text:         "output",
+						FinishReason: "stop",
+					},
+				},
+			},
 		}, {
 			"CompletionStreamWithEngine",
 			func() (interface{}, error) {
@@ -175,120 +211,120 @@ func TestResponseBadStatusCode(t *testing.T) {
 				}
 				return rsp, client.CompletionStreamWithEngine(ctx, gpt3.AdaEngine, gpt3.CompletionRequest{}, onData)
 			},
-			"Post https://api.openai.com/v1/engines/ada/completions: request error",
+			nil, // streaming responses are tested separately
 		}, {
 			"Search",
 			func() (interface{}, error) {
 				return client.Search(ctx, gpt3.SearchRequest{})
 			},
-			"Post https://api.openai.com/v1/engines/davinci/search: request error",
+			&gpt3.SearchResponse{
+				Data: []gpt3.SearchData{
+					gpt3.SearchData{
+						Document: 1,
+						Object:   "search_result",
+						Score:    40.312,
+					},
+				},
+			},
 		}, {
 			"SearchWithEngine",
 			func() (interface{}, error) {
 				return client.SearchWithEngine(ctx, gpt3.AdaEngine, gpt3.SearchRequest{})
 			},
-			"Post https://api.openai.com/v1/engines/ada/search: request error",
+			&gpt3.SearchResponse{
+				Data: []gpt3.SearchData{
+					gpt3.SearchData{
+						Document: 1,
+						Object:   "search_result",
+						Score:    40.312,
+					},
+				},
+			},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			for _, code := range []int{400, 401, 404, 422, 500} {
-				// first mock with error with body failure
+			t.Run("bad status codes", func(t *testing.T) {
+				for _, code := range []int{400, 401, 404, 422, 500} {
+					// first mock with error with body failure
+					mockResponse := &http.Response{
+						StatusCode: code,
+						Body:       ioutil.NopCloser(errReader(0)),
+					}
+
+					rt.RoundTripReturns(mockResponse, nil)
+					rsp, err := tc.apiCall()
+					assert.Nil(t, rsp)
+					assert.EqualError(t, err, "failed to read from body: read error")
+
+					// then mock with an unknown error string
+					mockResponse = &http.Response{
+						StatusCode: code,
+						Body:       ioutil.NopCloser(bytes.NewBufferString("unknown error")),
+					}
+
+					rt.RoundTripReturns(mockResponse, nil)
+					rsp, err = tc.apiCall()
+					assert.Nil(t, rsp)
+					assert.EqualError(t, err, fmt.Sprintf("[%d:Unexpected] unknown error", code))
+
+					// then mock with an json APIErrorResponse
+					apiErrorResponse := &gpt3.APIErrorResponse{
+						Error: gpt3.APIError{
+							Type:    "test_type",
+							Message: "test message",
+						},
+					}
+
+					data, err := json.Marshal(apiErrorResponse)
+					assert.NoError(t, err)
+
+					mockResponse = &http.Response{
+						StatusCode: code,
+						Body:       ioutil.NopCloser(bytes.NewBuffer(data)),
+					}
+
+					rt.RoundTripReturns(mockResponse, nil)
+					rsp, err = tc.apiCall()
+					assert.Nil(t, rsp)
+					assert.EqualError(t, err, fmt.Sprintf("[%d:test_type] test message", code))
+					apiErrorResponse.Error.StatusCode = code
+					assert.Equal(t, apiErrorResponse.Error, err)
+				}
+			})
+			t.Run("success code json decode failure", func(t *testing.T) {
 				mockResponse := &http.Response{
-					StatusCode: code,
-					Body:       ioutil.NopCloser(errReader(0)),
+					StatusCode: 200,
+					Body:       ioutil.NopCloser(bytes.NewBufferString("invalid json")),
 				}
 
 				rt.RoundTripReturns(mockResponse, nil)
+
 				rsp, err := tc.apiCall()
+				assert.Error(t, err, "invalid json response: invalid character 'i' looking for beginning of value")
 				assert.Nil(t, rsp)
-				assert.EqualError(t, err, "failed to read from body: read error")
+			})
+			// skip streaming/nil response objects here as those will be tested separately
+			if tc.responseObject != nil {
+				t.Run("successful response", func(t *testing.T) {
+					data, err := json.Marshal(tc.responseObject)
+					assert.NoError(t, err)
 
-				// then mock with an unknown error string
-				mockResponse = &http.Response{
-					StatusCode: code,
-					Body:       ioutil.NopCloser(bytes.NewBufferString("unknown error")),
-				}
+					mockResponse := &http.Response{
+						StatusCode: 200,
+						Body:       ioutil.NopCloser(bytes.NewBuffer(data)),
+					}
 
-				rt.RoundTripReturns(mockResponse, nil)
-				rsp, err = tc.apiCall()
-				assert.Nil(t, rsp)
-				assert.EqualError(t, err, fmt.Sprintf("[%d:Unexpected] unknown error", code))
+					rt.RoundTripReturns(mockResponse, nil)
 
-				// then mock with an json APIErrorResponse
-				apiErrorResponse := &gpt3.APIErrorResponse{
-					Error: gpt3.APIError{
-						Type:    "test_type",
-						Message: "test message",
-					},
-				}
-
-				data, err := json.Marshal(apiErrorResponse)
-				assert.NoError(t, err)
-
-				mockResponse = &http.Response{
-					StatusCode: code,
-					Body:       ioutil.NopCloser(bytes.NewBuffer(data)),
-				}
-
-				rt.RoundTripReturns(mockResponse, nil)
-				rsp, err = tc.apiCall()
-				assert.Nil(t, rsp)
-				assert.EqualError(t, err, fmt.Sprintf("[%d:test_type] test message", code))
-				apiErrorResponse.Error.StatusCode = code
-				assert.Equal(t, apiErrorResponse.Error, err)
+					rsp, err := tc.apiCall()
+					assert.NoError(t, err)
+					assert.Equal(t, tc.responseObject, rsp)
+				})
 			}
 		})
 	}
 }
 
-func TestEnginesJsonDecodeFailure(t *testing.T) {
-	rt, httpClient := fakeHttpClient()
-	client := gpt3.NewClient("test-key", gpt3.WithHTTPClient(httpClient))
-
-	mockResponse := &http.Response{
-		Status:     http.StatusText(200),
-		StatusCode: 200,
-		Body:       ioutil.NopCloser(bytes.NewBufferString("invalid json")),
-	}
-
-	rt.RoundTripReturns(mockResponse, nil)
-
-	ctx := context.Background()
-	rsp, err := client.Engines(ctx)
-	assert.Error(t, err, "invalid json response: invalid character 'i' looking for beginning of value")
-	assert.Nil(t, rsp)
-}
-
-func TestEnginesSuccess(t *testing.T) {
-	rt, httpClient := fakeHttpClient()
-	client := gpt3.NewClient("test-key", gpt3.WithHTTPClient(httpClient))
-
-	engines := &gpt3.EnginesResponse{
-		Data: []gpt3.EngineObject{
-			gpt3.EngineObject{
-				ID:     "123",
-				Object: "list",
-				Owner:  "owner",
-				Ready:  true,
-			},
-		},
-	}
-
-	data, err := json.Marshal(engines)
-	assert.NoError(t, err)
-
-	mockResponse := &http.Response{
-		Status:     http.StatusText(200),
-		StatusCode: 200,
-		Body:       ioutil.NopCloser(bytes.NewBuffer(data)),
-	}
-
-	rt.RoundTripReturns(mockResponse, nil)
-
-	ctx := context.Background()
-	rsp, err := client.Engines(ctx)
-	assert.NoError(t, err)
-	assert.Equal(t, engines, rsp)
-}
+// TODO: add streaming response tests
