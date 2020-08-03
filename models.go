@@ -9,8 +9,8 @@ type APIError struct {
 	Type       string `json:"type"`
 }
 
-func (e *APIError) Error() string {
-	return fmt.Sprintf("[%d]%s: %s", e.StatusCode, e.Type, e.Message)
+func (e APIError) Error() string {
+	return fmt.Sprintf("[%d:%s] %s", e.StatusCode, e.Type, e.Message)
 }
 
 // APIErrorResponse is the full error respnose that has been returned by an API.

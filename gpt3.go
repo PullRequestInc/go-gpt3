@@ -247,10 +247,10 @@ func checkForSuccess(resp *http.Response) error {
 			Type:       "Unexpected",
 			Message:    string(data),
 		}
-		return &apiError
+		return apiError
 	}
 	result.Error.StatusCode = resp.StatusCode
-	return &result.Error
+	return result.Error
 }
 
 func getResponseObject(rsp *http.Response, v interface{}) error {
