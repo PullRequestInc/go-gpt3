@@ -1,6 +1,6 @@
 # go-gpt3
 
-An OpenAPI GPT-3 API client enabling Go/Golang programs to interact with the gpt3 APIs.
+An OpenAI GPT-3 API client enabling Go/Golang programs to interact with the gpt3 APIs.
 
 Supports using the completion APIs with or without streaming.
 
