@@ -34,8 +34,6 @@ type EnginesResponse struct {
 
 // CompletionRequest is a request for the completions API
 type CompletionRequest struct {
-	// The engine ID
-	EngineID string `json:"engine_id,omitempty"`
 	// A list of string prompts to use.
 	// TODO there are other prompt types here for using token integers that we could add support for.
 	Prompt []string `json:"prompt"`
@@ -82,7 +80,6 @@ type CompletionResponse struct {
 
 // SearchRequest is a request for the document search API
 type SearchRequest struct {
-	EngineID  string   `json:"engine_id"`
 	Documents []string `json:"documents"`
 	Query     string   `json:"query"`
 }
