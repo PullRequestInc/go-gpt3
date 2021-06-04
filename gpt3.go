@@ -68,6 +68,7 @@ type client struct {
 	userAgent     string
 	httpClient    *http.Client
 	defaultEngine string
+	idOrg         string
 }
 
 // NewClient returns a new OpenAI GPT-3 API client. An apiKey is required to use the client
@@ -82,6 +83,7 @@ func NewClient(apiKey string, options ...ClientOption) Client {
 		baseURL:       defaultBaseURL,
 		httpClient:    httpClient,
 		defaultEngine: DefaultEngine,
+		idOrg:         "",
 	}
 	for _, o := range options {
 		o(c)
@@ -281,6 +283,9 @@ func (c *client) newRequest(ctx context.Context, method, path string, payload in
 	req, err := http.NewRequestWithContext(ctx, method, url, bodyReader)
 	if err != nil {
 		return nil, err
+	}
+	if (len(c.idOrg) > 0) {
+		req.Header.Set("OpenAI-Organization", c.idOrg)
 	}
 	req.Header.Set("Content-type", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.apiKey))
