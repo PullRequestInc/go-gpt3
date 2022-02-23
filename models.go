@@ -61,12 +61,20 @@ type CompletionRequest struct {
 	Stream bool `json:"stream,omitempty"`
 }
 
+// LogprobResult represents logprob result of Choice
+type LogprobResult struct {
+	Tokens        []string             `json:"tokens"`
+	TokenLogprobs []float32            `json:"token_logprobs"`
+	TopLogprobs   []map[string]float32 `json:"top_logprobs"`
+	TextOffset    []int                `json:"text_offset"`
+}
+
 // CompletionResponseChoice is one of the choices returned in the response to the Completions API
 type CompletionResponseChoice struct {
-	Text         string `json:"text"`
-	Index        int    `json:"index"`
-	LogProbs     *int   `json:"logprobs"`
-	FinishReason string `json:"finish_reason"`
+	Text         string        `json:"text"`
+	Index        int           `json:"index"`
+	LogProbs     LogprobResult `json:"logprobs"`
+	FinishReason string        `json:"finish_reason"`
 }
 
 // CompletionResponse is the full response from a request to the completions API
