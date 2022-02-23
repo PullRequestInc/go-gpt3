@@ -44,7 +44,7 @@ type CompletionRequest struct {
 	// Alternative to temperature for nucleus sampling
 	TopP *float32 `json:"top_p,omitempty"`
 	// How many choice to create for each prompt
-	N *float32 `json:"n"`
+	N *int `json:"n"`
 	// Include the probabilities of most likely tokens
 	LogProbs *int `json:"logprobs"`
 	// Echo back the prompt in addition to the completion
