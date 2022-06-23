@@ -89,6 +89,12 @@ func TestRequestCreationFails(t *testing.T) {
 			},
 			"Post \"https://api.openai.com/v1/engines/ada/completions\": request error",
 		}, {
+			"Edits",
+			func() (interface{}, error) {
+				return client.Edits(ctx, gpt3.EditsRequest{})
+			},
+			"Post \"https://api.openai.com/v1/edits\": request error",
+		}, {
 			"Search",
 			func() (interface{}, error) {
 				return client.Search(ctx, gpt3.SearchRequest{})

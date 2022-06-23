@@ -59,6 +59,9 @@ type Client interface {
 	// CompletionStreamWithEngine is the same as CompletionStream except allows overriding the default engine on the client
 	CompletionStreamWithEngine(ctx context.Context, engine string, request CompletionRequest, onData func(*CompletionResponse)) error
 
+	// Given a prompt and an instruction, the model will return an edited version of the prompt.
+	Edits(ctx context.Context, request EditsRequest) (*EditsResponse, error)
+
 	// Search performs a semantic search over a list of documents with the default engine.
 	Search(ctx context.Context, request SearchRequest) (*SearchResponse, error)
 
@@ -204,6 +207,23 @@ func (c *client) CompletionStreamWithEngine(
 	return nil
 }
 
+func (c *client) Edits(ctx context.Context, request EditsRequest) (*EditsResponse, error) {
+	req, err := c.newRequest(ctx, "POST", "/edits", request)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.performRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	output := new(EditsResponse)
+	if err := getResponseObject(resp, output); err != nil {
+		return nil, err
+	}
+	return output, nil
+}
+
 func (c *client) Search(ctx context.Context, request SearchRequest) (*SearchResponse, error) {
 	return c.SearchWithEngine(ctx, c.defaultEngine, request)
 }
@@ -288,7 +308,7 @@ func (c *client) newRequest(ctx context.Context, method, path string, payload in
 	if err != nil {
 		return nil, err
 	}
-	if (len(c.idOrg) > 0) {
+	if len(c.idOrg) > 0 {
 		req.Header.Set("OpenAI-Organization", c.idOrg)
 	}
 	req.Header.Set("Content-type", "application/json")
