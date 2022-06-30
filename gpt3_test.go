@@ -47,21 +47,21 @@ func TestRequestCreationFails(t *testing.T) {
 			func() (interface{}, error) {
 				return client.Engines(ctx)
 			},
-			"Get https://api.openai.com/v1/engines: request error",
+			"Get \"https://api.openai.com/v1/engines\": request error",
 		},
 		{
 			"Engine",
 			func() (interface{}, error) {
 				return client.Engine(ctx, gpt3.DefaultEngine)
 			},
-			"Get https://api.openai.com/v1/engines/davinci: request error",
+			"Get \"https://api.openai.com/v1/engines/davinci\": request error",
 		},
 		{
 			"Completion",
 			func() (interface{}, error) {
 				return client.Completion(ctx, gpt3.CompletionRequest{})
 			},
-			"Post https://api.openai.com/v1/engines/davinci/completions: request error",
+			"Post \"https://api.openai.com/v1/engines/davinci/completions\": request error",
 		}, {
 			"CompletionStream",
 			func() (interface{}, error) {
@@ -71,13 +71,13 @@ func TestRequestCreationFails(t *testing.T) {
 				}
 				return rsp, client.CompletionStream(ctx, gpt3.CompletionRequest{}, onData)
 			},
-			"Post https://api.openai.com/v1/engines/davinci/completions: request error",
+			"Post \"https://api.openai.com/v1/engines/davinci/completions\": request error",
 		}, {
 			"CompletionWithEngine",
 			func() (interface{}, error) {
 				return client.CompletionWithEngine(ctx, gpt3.AdaEngine, gpt3.CompletionRequest{})
 			},
-			"Post https://api.openai.com/v1/engines/ada/completions: request error",
+			"Post \"https://api.openai.com/v1/engines/ada/completions\": request error",
 		}, {
 			"CompletionStreamWithEngine",
 			func() (interface{}, error) {
@@ -87,19 +87,25 @@ func TestRequestCreationFails(t *testing.T) {
 				}
 				return rsp, client.CompletionStreamWithEngine(ctx, gpt3.AdaEngine, gpt3.CompletionRequest{}, onData)
 			},
-			"Post https://api.openai.com/v1/engines/ada/completions: request error",
+			"Post \"https://api.openai.com/v1/engines/ada/completions\": request error",
+		}, {
+			"Edits",
+			func() (interface{}, error) {
+				return client.Edits(ctx, gpt3.EditsRequest{})
+			},
+			"Post \"https://api.openai.com/v1/edits\": request error",
 		}, {
 			"Search",
 			func() (interface{}, error) {
 				return client.Search(ctx, gpt3.SearchRequest{})
 			},
-			"Post https://api.openai.com/v1/engines/davinci/search: request error",
+			"Post \"https://api.openai.com/v1/engines/davinci/search\": request error",
 		}, {
 			"SearchWithEngine",
 			func() (interface{}, error) {
 				return client.SearchWithEngine(ctx, gpt3.AdaEngine, gpt3.SearchRequest{})
 			},
-			"Post https://api.openai.com/v1/engines/ada/search: request error",
+			"Post \"https://api.openai.com/v1/engines/ada/search\": request error",
 		},
 	}
 

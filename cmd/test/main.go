@@ -57,4 +57,16 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
+
+	fmt.Print("\n\nedits API:\n")
+
+	editsResponse, err := client.Edits(ctx, gpt3.EditsRequest{
+		Model:       "text-davinci-edit-001",
+		Input:       "What day of the wek is it?",
+		Instruction: "Fix the spelling mistakes",
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Printf("%+v\n", editsResponse)
 }
