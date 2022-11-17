@@ -285,7 +285,7 @@ func (c *client) Embedding(ctx context.Context, request EmbeddingRequest) (*Embe
 	if err := getResponseObject(resp, output); err != nil {
 		return nil, err
 	}
-	return nil, nil
+	return output, nil
 }
 
 func (c *client) performRequest(req *http.Request) (*http.Response, error) {
