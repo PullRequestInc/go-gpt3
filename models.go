@@ -126,7 +126,7 @@ type EditsResponse struct {
 type EmbeddingResult struct {
 	Object    string    `json:"object"`
 	Embedding []float64 `json:"embedding"`
-	Index     string    `json:"index"`
+	Index     int       `json:"index"`
 }
 
 // EmbeddingResponse is the response from a Create embeddings request.
