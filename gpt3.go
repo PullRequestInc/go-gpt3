@@ -101,7 +101,6 @@ type client struct {
 	httpClient    *http.Client
 	defaultEngine string
 	idOrg         string
-	userID        string
 }
 
 // NewClient returns a new OpenAI GPT-3 API client. An apiKey is required to use the client

@@ -32,15 +32,6 @@ func WithUserAgent(userAgent string) ClientOption {
 	}
 }
 
-// WithUserID is a client option that allows you to specify the unique user ID per request
-// see: https://beta.openai.com/docs/guides/safety-best-practices/end-user-ids
-func WithUserID(userID string) ClientOption {
-	return func(c *client) error {
-		c.userID = userID
-		return nil
-	}
-}
-
 // WithBaseURL is a client option that allows you to override the default base url of the client.
 // The default base url is "https://api.openai.com/v1"
 func WithBaseURL(baseURL string) ClientOption {

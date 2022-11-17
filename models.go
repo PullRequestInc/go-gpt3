@@ -32,12 +32,6 @@ type EnginesResponse struct {
 	Object string         `json:"object"`
 }
 
-// A base model/mixin that is bound to a unique user ID for whom the request is made
-// This is only available on newer OpenAI endpoints.
-type UserBasedRequest struct {
-	UserID string `json:"user"`
-}
-
 // CompletionRequest is a request for the completions API
 type CompletionRequest struct {
 	// A list of string prompts to use.
