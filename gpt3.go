@@ -26,66 +26,26 @@ const (
 	DefaultEngine        = DavinciEngine
 )
 
-type EmbeddingEngine int8
+type EmbeddingEngine string
 
 const (
-	TextSimilarityAda001 EmbeddingEngine = iota
-	TextSimilarityBabbage001
-	TextSimilarityCurie001
-	TextSimilarityDavinci001
-	TextSearchAdaDoc001
-	TextSearchAdaQuery001
-	TextSearchBabbageDoc001
-	TextSearchBabbageQuery001
-	TextSearchCurieDoc001
-	TextSearchCurieQuery001
-	TextSearchDavinciDoc001
-	TextSearchDavinciQuery001
-	CodeSearchAdaCode001
-	CodeSearchAdaText001
-	CodeSearchBabbageCode001
-	CodeSearchBabbageText001
+	TextSimilarityAda001      = "text-similarity-ada-001"
+	TextSimilarityBabbage001  = "text-similarity-babbage-001"
+	TextSimilarityCurie001    = "text-similarity-curie-001"
+	TextSimilarityDavinci001  = "text-similarity-davinci-001"
+	TextSearchAdaDoc001       = "text-search-ada-doc-001"
+	TextSearchAdaQuery001     = "text-search-ada-query-001"
+	TextSearchBabbageDoc001   = "text-search-babbage-doc-001"
+	TextSearchBabbageQuery001 = "text-search-babbage-query-001"
+	TextSearchCurieDoc001     = "text-search-curie-doc-001"
+	TextSearchCurieQuery001   = "text-search-curie-query-001"
+	TextSearchDavinciDoc001   = "text-search-davinci-doc-001"
+	TextSearchDavinciQuery001 = "text-search-davinci-query-001"
+	CodeSearchAdaCode001      = "code-search-ada-code-001"
+	CodeSearchAdaText001      = "code-search-ada-text-001"
+	CodeSearchBabbageCode001  = "code-search-babbage-code-001"
+	CodeSearchBabbageText001  = "code-search-babbage-text-001"
 )
-
-// Gets the string representation of the embedding engine
-func (e *EmbeddingEngine) String() string {
-	switch *e {
-	case TextSimilarityAda001:
-		return "text-similarity-ada-001"
-	case TextSimilarityBabbage001:
-		return "text-similarity-babbage-001"
-	case TextSimilarityCurie001:
-		return "text-similarity-curie-001"
-	case TextSimilarityDavinci001:
-		return "text-similarity-davinci-001"
-	case TextSearchAdaDoc001:
-		return "text-search-ada-doc-001"
-	case TextSearchAdaQuery001:
-		return "text-search-ada-query-001"
-	case TextSearchBabbageDoc001:
-		return "text-search-babbage-doc-001"
-	case TextSearchBabbageQuery001:
-		return "text-search-babbage-query-001"
-	case TextSearchCurieDoc001:
-		return "text-search-curie-doc-001"
-	case TextSearchCurieQuery001:
-		return "text-search-curie-query-001"
-	case TextSearchDavinciDoc001:
-		return "text-search-davinci-doc-001"
-	case TextSearchDavinciQuery001:
-		return "text-search-davinci-query-001"
-	case CodeSearchAdaCode001:
-		return "code-search-ada-code-001"
-	case CodeSearchAdaText001:
-		return "code-search-ada-text-001"
-	case CodeSearchBabbageCode001:
-		return "code-search-babbage-code-001"
-	case CodeSearchBabbageText001:
-		return "code-search-babbage-text-001"
-	default:
-		return ""
-	}
-}
 
 const (
 	defaultBaseURL        = "https://api.openai.com/v1"
