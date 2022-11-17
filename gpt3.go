@@ -18,12 +18,74 @@ const (
 	TextBabbage001Engine = "text-babbage-001"
 	TextCurie001Engine   = "text-curie-001"
 	TextDavinci001Engine = "text-davinci-001"
+	TextDavinci002Engine = "text-davinci-002"
 	AdaEngine            = "ada"
 	BabbageEngine        = "babbage"
 	CurieEngine          = "curie"
 	DavinciEngine        = "davinci"
 	DefaultEngine        = DavinciEngine
 )
+
+type EmbeddingEngine int8
+
+const (
+	TextSimilarityAda001 EmbeddingEngine = iota
+	TextSimilarityBabbage001
+	TextSimilarityCurie001
+	TextSimilarityDavinci001
+	TextSearchAdaDoc001
+	TextSearchAdaQuery001
+	TextSearchBabbageDoc001
+	TextSearchBabbageQuery001
+	TextSearchCurieDoc001
+	TextSearchCurieQuery001
+	TextSearchDavinciDoc001
+	TextSearchDavinciQuery001
+	CodeSearchAdaCode001
+	CodeSearchAdaText001
+	CodeSearchBabbageCode001
+	CodeSearchBabbageText001
+)
+
+// Gets the string representation of the embedding engine
+func (e *EmbeddingEngine) String() string {
+	switch *e {
+	case TextSimilarityAda001:
+		return "text-similarity-ada-001"
+	case TextSimilarityBabbage001:
+		return "text-similarity-babbage-001"
+	case TextSimilarityCurie001:
+		return "text-similarity-curie-001"
+	case TextSimilarityDavinci001:
+		return "text-similarity-davinci-001"
+	case TextSearchAdaDoc001:
+		return "text-search-ada-doc-001"
+	case TextSearchAdaQuery001:
+		return "text-search-ada-query-001"
+	case TextSearchBabbageDoc001:
+		return "text-search-babbage-doc-001"
+	case TextSearchBabbageQuery001:
+		return "text-search-babbage-query-001"
+	case TextSearchCurieDoc001:
+		return "text-search-curie-doc-001"
+	case TextSearchCurieQuery001:
+		return "text-search-curie-query-001"
+	case TextSearchDavinciDoc001:
+		return "text-search-davinci-doc-001"
+	case TextSearchDavinciQuery001:
+		return "text-search-davinci-query-001"
+	case CodeSearchAdaCode001:
+		return "code-search-ada-code-001"
+	case CodeSearchAdaText001:
+		return "code-search-ada-text-001"
+	case CodeSearchBabbageCode001:
+		return "code-search-babbage-code-001"
+	case CodeSearchBabbageText001:
+		return "code-search-babbage-text-001"
+	default:
+		return ""
+	}
+}
 
 const (
 	defaultBaseURL        = "https://api.openai.com/v1"
@@ -67,6 +129,9 @@ type Client interface {
 
 	// SearchWithEngine performs a semantic search over a list of documents with the specified engine.
 	SearchWithEngine(ctx context.Context, engine string, request SearchRequest) (*SearchResponse, error)
+
+	// Returns an embedding using the provided request.
+	Embedding(ctx context.Context, request EmbeddingRequest) (*EmbeddingResponse, error)
 }
 
 type client struct {
@@ -76,6 +141,7 @@ type client struct {
 	httpClient    *http.Client
 	defaultEngine string
 	idOrg         string
+	userID        string
 }
 
 // NewClient returns a new OpenAI GPT-3 API client. An apiKey is required to use the client
@@ -242,6 +308,24 @@ func (c *client) SearchWithEngine(ctx context.Context, engine string, request Se
 		return nil, err
 	}
 	return output, nil
+}
+
+// EmbeddingWithEngine creates an embedding and allows overriding the engine
+func (c *client) Embedding(ctx context.Context, request EmbeddingRequest) (*EmbeddingResponse, error) {
+	req, err := c.newRequest(ctx, "POST", "/embeddings", request)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.performRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	output := new(EmbeddingResponse)
+	if err := getResponseObject(resp, output); err != nil {
+		return nil, err
+	}
+	return nil, nil
 }
 
 func (c *client) performRequest(req *http.Request) (*http.Response, error) {

@@ -32,6 +32,12 @@ type EnginesResponse struct {
 	Object string         `json:"object"`
 }
 
+// A base model/mixin that is bound to a unique user ID for whom the request is made
+// This is only available on newer OpenAI endpoints.
+type UserBasedRequest struct {
+	UserID string `json:"user"`
+}
+
 // CompletionRequest is a request for the completions API
 type CompletionRequest struct {
 	// A list of string prompts to use.
@@ -77,6 +83,13 @@ type EditsRequest struct {
 	N *int `json:"n"`
 }
 
+// EmbeddingRequest is a request for the Embeddings API
+type EmbeddingRequest struct {
+	Input []string `json:"input"`
+	Model string   `json:"model"`
+	User  string   `json:"user,omitempty"`
+}
+
 // LogprobResult represents logprob result of Choice
 type LogprobResult struct {
 	Tokens        []string             `json:"tokens"`
@@ -108,6 +121,19 @@ type EditsResponse struct {
 	Created int                   `json:"created"`
 	Choices []EditsResponseChoice `json:"choices"`
 	Usage   EditsResponseUsage    `json:"usage"`
+}
+
+type EmbeddingResult struct {
+	Object    string `json:"object"`
+	Embedding string `json:"embedding"`
+	Index     string `json:"index"`
+}
+
+// EmbeddingResponse is the response from a Create embeddings request.
+type EmbeddingResponse struct {
+	Object string            `json:"object"`
+	Data   []EmbeddingResult `json:"data"`
+	Model  string            `json:"model"`
 }
 
 // EditsResponseChoice is one of the choices returned in the response to the Edits API
