@@ -107,7 +107,7 @@ func TestRequestCreationFails(t *testing.T) {
 			},
 			"Post \"https://api.openai.com/v1/engines/ada/search\": request error",
 		}, {
-			"Embedding",
+			"Embeddings",
 			func() (interface{}, error) {
 				return client.Embeddings(ctx, gpt3.EmbeddingsRequest{})
 			},
