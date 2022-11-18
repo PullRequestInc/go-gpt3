@@ -106,6 +106,12 @@ func TestRequestCreationFails(t *testing.T) {
 				return client.SearchWithEngine(ctx, gpt3.AdaEngine, gpt3.SearchRequest{})
 			},
 			"Post \"https://api.openai.com/v1/engines/ada/search\": request error",
+		}, {
+			"Embedding",
+			func() (interface{}, error) {
+				return client.Embeddings(ctx, gpt3.EmbeddingsRequest{})
+			},
+			"Post \"https://api.openai.com/v1/embeddings\": request error",
 		},
 	}
 
@@ -245,6 +251,20 @@ func TestResponses(t *testing.T) {
 						Score:    40.312,
 					},
 				},
+			},
+		}, {
+			"Embedding",
+			func() (interface{}, error) {
+				return client.Embeddings(ctx, gpt3.EmbeddingsRequest{})
+			},
+			&gpt3.EmbeddingsResponse{
+				Object: "list",
+				Data: []gpt3.EmbeddingsResult{{
+					Object:    "object",
+					Embedding: []float64{0.1, 0.2, 0.3},
+					Index:     0,
+				}},
+				Model: gpt3.TextSimilarityBabbage001,
 			},
 		},
 	}

@@ -91,7 +91,7 @@ type Client interface {
 	SearchWithEngine(ctx context.Context, engine string, request SearchRequest) (*SearchResponse, error)
 
 	// Returns an embedding using the provided request.
-	Embedding(ctx context.Context, request EmbeddingRequest) (*EmbeddingResponse, error)
+	Embeddings(ctx context.Context, request EmbeddingsRequest) (*EmbeddingsResponse, error)
 }
 
 type client struct {
@@ -269,8 +269,10 @@ func (c *client) SearchWithEngine(ctx context.Context, engine string, request Se
 	return output, nil
 }
 
-// EmbeddingWithEngine creates an embedding and allows overriding the engine
-func (c *client) Embedding(ctx context.Context, request EmbeddingRequest) (*EmbeddingResponse, error) {
+// Embeddings creates text embeddings for a supplied slice of inputs with a provided model.
+//
+// See: https://beta.openai.com/docs/api-reference/embeddings
+func (c *client) Embeddings(ctx context.Context, request EmbeddingsRequest) (*EmbeddingsResponse, error) {
 	req, err := c.newRequest(ctx, "POST", "/embeddings", request)
 	if err != nil {
 		return nil, err
@@ -280,11 +282,11 @@ func (c *client) Embedding(ctx context.Context, request EmbeddingRequest) (*Embe
 		return nil, err
 	}
 
-	output := new(EmbeddingResponse)
-	if err := getResponseObject(resp, output); err != nil {
+	output := EmbeddingsResponse{}
+	if err := getResponseObject(resp, &output); err != nil {
 		return nil, err
 	}
-	return output, nil
+	return &output, nil
 }
 
 func (c *client) performRequest(req *http.Request) (*http.Response, error) {
