@@ -253,7 +253,7 @@ func TestResponses(t *testing.T) {
 				},
 			},
 		}, {
-			"Embedding",
+			"Embeddings",
 			func() (interface{}, error) {
 				return client.Embeddings(ctx, gpt3.EmbeddingsRequest{})
 			},

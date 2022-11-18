@@ -127,13 +127,18 @@ type EditsResponse struct {
 	Usage   EditsResponseUsage    `json:"usage"`
 }
 
+// The inner result of a create embeddings request, containing the embeddings for a single input.
 type EmbeddingsResult struct {
-	Object    string    `json:"object"`
+	// The type of object returned (e.g., "list", "object")
+	Object string `json:"object"`
+	// The embedding data for the input
 	Embedding []float64 `json:"embedding"`
 	Index     int       `json:"index"`
 }
 
-// EmbeddingsResponse is the response from a Create embeddings request.
+// EmbeddingsResponse is the response from a create embeddings request.
+//
+// See: https://beta.openai.com/docs/api-reference/embeddings/create
 type EmbeddingsResponse struct {
 	Object string             `json:"object"`
 	Data   []EmbeddingsResult `json:"data"`
