@@ -18,11 +18,33 @@ const (
 	TextBabbage001Engine = "text-babbage-001"
 	TextCurie001Engine   = "text-curie-001"
 	TextDavinci001Engine = "text-davinci-001"
+	TextDavinci002Engine = "text-davinci-002"
 	AdaEngine            = "ada"
 	BabbageEngine        = "babbage"
 	CurieEngine          = "curie"
 	DavinciEngine        = "davinci"
 	DefaultEngine        = DavinciEngine
+)
+
+type EmbeddingEngine string
+
+const (
+	TextSimilarityAda001      = "text-similarity-ada-001"
+	TextSimilarityBabbage001  = "text-similarity-babbage-001"
+	TextSimilarityCurie001    = "text-similarity-curie-001"
+	TextSimilarityDavinci001  = "text-similarity-davinci-001"
+	TextSearchAdaDoc001       = "text-search-ada-doc-001"
+	TextSearchAdaQuery001     = "text-search-ada-query-001"
+	TextSearchBabbageDoc001   = "text-search-babbage-doc-001"
+	TextSearchBabbageQuery001 = "text-search-babbage-query-001"
+	TextSearchCurieDoc001     = "text-search-curie-doc-001"
+	TextSearchCurieQuery001   = "text-search-curie-query-001"
+	TextSearchDavinciDoc001   = "text-search-davinci-doc-001"
+	TextSearchDavinciQuery001 = "text-search-davinci-query-001"
+	CodeSearchAdaCode001      = "code-search-ada-code-001"
+	CodeSearchAdaText001      = "code-search-ada-text-001"
+	CodeSearchBabbageCode001  = "code-search-babbage-code-001"
+	CodeSearchBabbageText001  = "code-search-babbage-text-001"
 )
 
 const (
@@ -67,6 +89,9 @@ type Client interface {
 
 	// SearchWithEngine performs a semantic search over a list of documents with the specified engine.
 	SearchWithEngine(ctx context.Context, engine string, request SearchRequest) (*SearchResponse, error)
+
+	// Returns an embedding using the provided request.
+	Embeddings(ctx context.Context, request EmbeddingsRequest) (*EmbeddingsResponse, error)
 }
 
 type client struct {
@@ -242,6 +267,26 @@ func (c *client) SearchWithEngine(ctx context.Context, engine string, request Se
 		return nil, err
 	}
 	return output, nil
+}
+
+// Embeddings creates text embeddings for a supplied slice of inputs with a provided model.
+//
+// See: https://beta.openai.com/docs/api-reference/embeddings
+func (c *client) Embeddings(ctx context.Context, request EmbeddingsRequest) (*EmbeddingsResponse, error) {
+	req, err := c.newRequest(ctx, "POST", "/embeddings", request)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.performRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	output := EmbeddingsResponse{}
+	if err := getResponseObject(resp, &output); err != nil {
+		return nil, err
+	}
+	return &output, nil
 }
 
 func (c *client) performRequest(req *http.Request) (*http.Response, error) {
