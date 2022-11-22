@@ -264,7 +264,10 @@ func TestResponses(t *testing.T) {
 					Embedding: []float64{0.1, 0.2, 0.3},
 					Index:     0,
 				}},
-				Model: gpt3.TextSimilarityBabbage001,
+				Usage: gpt3.EmbeddingsUsage{
+					PromptTokens: 1,
+					TotalTokens:  2,
+				},
 			},
 		},
 	}

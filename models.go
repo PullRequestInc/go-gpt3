@@ -136,13 +136,21 @@ type EmbeddingsResult struct {
 	Index     int       `json:"index"`
 }
 
+// The usage stats for an embeddings response
+type EmbeddingsUsage struct {
+	// The number of tokens used by the prompt
+	PromptTokens int `json:"prompt_tokens"`
+	// The total tokens used
+	TotalTokens int `json:"total_tokens"`
+}
+
 // EmbeddingsResponse is the response from a create embeddings request.
 //
 // See: https://beta.openai.com/docs/api-reference/embeddings/create
 type EmbeddingsResponse struct {
 	Object string             `json:"object"`
 	Data   []EmbeddingsResult `json:"data"`
-	Model  string             `json:"model"`
+	Usage  EmbeddingsUsage    `json:"usage"`
 }
 
 // EditsResponseChoice is one of the choices returned in the response to the Edits API
