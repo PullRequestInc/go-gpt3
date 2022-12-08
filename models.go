@@ -120,6 +120,7 @@ type CompletionResponse struct {
 	Usage   CompletionResponseUsage    `json:"usage"`
 }
 
+//CompletionResponseUsage is the object that returns how many tokens the completion's request used
 type CompletionResponseUsage struct {
 	PromptTokens     int `json:"prompt_tokens"`
 	CompletionTokens int `json:"completion_tokens"`
