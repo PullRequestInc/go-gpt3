@@ -46,6 +46,7 @@ const (
 	CodeSearchAdaText001      = "code-search-ada-text-001"
 	CodeSearchBabbageCode001  = "code-search-babbage-code-001"
 	CodeSearchBabbageText001  = "code-search-babbage-text-001"
+	TextEmbeddingAda002       = "text-embedding-ada-002"
 )
 
 const (
