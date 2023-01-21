@@ -2,7 +2,7 @@ package gpt3
 
 import "fmt"
 
-// APIError represents an error that occured on an API
+// APIError represents an error that occurred on an API
 type APIError struct {
 	StatusCode int    `json:"status_code"`
 	Message    string `json:"message"`
@@ -13,12 +13,12 @@ func (e APIError) Error() string {
 	return fmt.Sprintf("[%d:%s] %s", e.StatusCode, e.Type, e.Message)
 }
 
-// APIErrorResponse is the full error respnose that has been returned by an API.
+// APIErrorResponse is the full error response that has been returned by an API.
 type APIErrorResponse struct {
 	Error APIError `json:"error"`
 }
 
-// EngineObject contained in an engine reponse
+// EngineObject contained in an engine response
 type EngineObject struct {
 	ID     string `json:"id"`
 	Object string `json:"object"`
@@ -30,6 +30,20 @@ type EngineObject struct {
 type EnginesResponse struct {
 	Data   []EngineObject `json:"data"`
 	Object string         `json:"object"`
+}
+
+// ModelObject
+type ModelObject struct {
+	ID          string   `json:"id"`
+	Object      string   `json:"object"`
+	OwnedBy     string   `json:"owned_by"`
+	Permissions []string `json:"permissions"`
+}
+
+// ModelsResponse is returned from the Models API
+type ModelsResponse struct {
+	Data   []ModelObject `json:"data"`
+	Object string        `json:"object"`
 }
 
 // CompletionRequest is a request for the completions API
@@ -57,7 +71,7 @@ type CompletionRequest struct {
 	FrequencyPenalty float32 `json:"frequency_penalty"`
 
 	// Whether to stream back results or not. Don't set this value in the request yourself
-	// as it will be overriden depending on if you use CompletionStream or Completion methods.
+	// as it will be overridden depending on if you use CompletionStream or Completion methods.
 	Stream bool `json:"stream,omitempty"`
 }
 
@@ -92,6 +106,62 @@ type EmbeddingsRequest struct {
 	// If you offer a preview of your product to non-logged in users, you can send a session ID
 	// instead."
 	User string `json:"user,omitempty"`
+}
+
+// UploadFileRequest is a request for the Files API
+type UploadFileRequest struct {
+	// The file name of the JSON Lines file to upload
+	File string `json:"file"`
+	// The purpose of the file. Use "fine-tune" for a file that will be used to fine-tune a model.
+	Purpose string `json:"purpose"`
+}
+
+// CreateFineTuneRequest is a request for the FineTune API
+type CreateFineTuneRequest struct {
+	// The ID of an uploaded file that contains training data
+	TrainingFile string `json:"training_file"`
+	// The ID of an uploaded file that contains validation data
+	ValidationFile string `json:"validation_file"`
+	// The ID of the model to fine-tune
+	Model string `json:"model"`
+	// The number of epochs to train for
+	NEpochs int `json:"n_epochs"`
+	// The batch size to use for training
+	BatchSize int `json:"batch_size"`
+	// The learning rate to use for training
+	LearningRate float32 `json:"learning_rate"`
+	// The weight to use for loss on the prompt tokens
+	PromptLossWeight float32 `json:"prompt_loss_weight"`
+	// If set, we calculate classification-specific metrics using the validation set at the end of each epoch
+	ComputeClassificationMetrics bool `json:"compute_classification_metrics"`
+	// The number of classes in a classification task
+	ClassificationNClasses int `json:"classification_n_classes"`
+	// The positive class in binary classification
+	ClassificationPositiveClass string `json:"classification_positive_class"`
+	// If this is provided, we calculate F-beta scores at the specified beta values
+	ClassificationBetas []float32 `json:"classification_betas"`
+	// A string of up to 40 characters that will be added to your fine-tuned model name
+	Suffix string `json:"suffix"`
+}
+
+// FineTuneRequest is a request for the FineTune API
+type FineTuneRequest struct {
+	// The ID of the fine-tune job
+	FineTuneID string `json:"fine_tune_id"`
+}
+
+// FineTuneEventsRequest is a request for the FineTune API
+type FineTuneEventsRequest struct {
+	// The ID of the fine-tune job
+	FineTuneID string `json:"fine_tune_id"`
+	// Whether to stream events for the fine-tune job
+	Stream bool `json:"stream"`
+}
+
+// DeleteFineTuneModelRequest is a request for the FineTune API
+type DeleteFineTuneModelRequest struct {
+	// The ID of the fine-tune model to delete
+	Model string `json:"model"`
 }
 
 // LogprobResult represents logprob result of Choice
@@ -159,6 +229,93 @@ type EmbeddingsResponse struct {
 	Object string             `json:"object"`
 	Data   []EmbeddingsResult `json:"data"`
 	Usage  EmbeddingsUsage    `json:"usage"`
+}
+
+// FileObject is a single file object
+type FileObject struct {
+	ID        string `json:"id"`
+	Object    string `json:"object"`
+	Bytes     int    `json:"bytes"`
+	CreatedAt int    `json:"created_at"`
+	Filename  string `json:"filename"`
+	Purpose   string `json:"purpose"`
+}
+
+// FilesResponse is the response from a list files request.
+//
+// See: https://beta.openai.com/docs/api-reference/files/list
+type FilesResponse struct {
+	Data   []FileObject `json:"data"`
+	Object string       `json:"object"`
+}
+
+// DeleteFileResponse is the response from a delete file request.
+//
+// See: https://beta.openai.com/docs/api-reference/files/delete
+type DeleteFileResponse struct {
+	ID      string `json:"id"`
+	Object  string `json:"object"`
+	Deleted bool   `json:"deleted"`
+}
+
+// FineTuneEvent is a single fine tune event
+type FineTuneEvent struct {
+	Object    string `json:"object"`
+	CreatedAt int    `json:"created_at"`
+	Level     string `json:"level"`
+	Message   string `json:"message"`
+}
+
+// FineTuneHyperparams is the hyperparams for a fine tune request
+type FineTuneHyperparams struct {
+	BatchSize              int     `json:"batch_size"`
+	LearningRateMultiplier float64 `json:"learning_rate_multiplier"`
+	NEpochs                int     `json:"n_epochs"`
+	PromptLossWeight       float64 `json:"prompt_loss_weight"`
+}
+
+// FineTuneObject is a single fine tune object
+//
+// See: https://beta.openai.com/docs/api-reference/fine-tunes/retrieve
+type FineTuneObject struct {
+	ID              string              `json:"id"`
+	Object          string              `json:"object"`
+	Model           string              `json:"model"`
+	CreatedAt       int                 `json:"created_at"`
+	Events          []FineTuneEvent     `json:"events"`
+	FineTuneModel   string              `json:"fine_tune_model"`
+	Hyperparams     FineTuneHyperparams `json:"hyperparams"`
+	OrganizationID  string              `json:"organization_id"`
+	ResultFiles     []FileObject        `json:"result_files"`
+	Status          string              `json:"status"`
+	ValidationFiles []FileObject        `json:"validation_files"`
+	TrainingFiles   []FileObject        `json:"training_files"`
+	UpdatedAt       int                 `json:"updated_at"`
+}
+
+// FineTunesResponse is the response from a list fine tunes request.
+//
+// See: https://beta.openai.com/docs/api-reference/fine-tunes/list
+type FineTunesResponse struct {
+	Data   []FineTuneObject `json:"data"`
+	Object string           `json:"object"`
+}
+
+// FineTuneEventsResponse
+//
+// See: https://beta.openai.com/docs/api-reference/fine-tunes/events
+type FineTuneEventsResponse struct {
+	Data   []FineTuneEvent `json:"data"`
+	Object string          `json:"object"`
+}
+
+// DeleteFineTuneModelResponse
+//
+// See: https://beta.openai.com/docs/api-reference/fine-tunes/delete-model
+type DeleteFineTuneModelResponse struct {
+	ID      string `json:"id"`
+	Object  string `json:"object"`
+	Deleted bool   `json:"deleted"`
 }
 
 // EditsResponseChoice is one of the choices returned in the response to the Edits API

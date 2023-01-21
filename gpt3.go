@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -55,19 +56,23 @@ const (
 	defaultTimeoutSeconds = 30
 )
 
-func getEngineURL(engine string) string {
-	return fmt.Sprintf("%s/engines/%s/completions", defaultBaseURL, engine)
-}
-
 // A Client is an API client to communicate with the OpenAI gpt-3 APIs
 type Client interface {
-	// Engines lists the currently available engines, and provides basic information about each
+	// Deprecated: Engines lists the currently available engines, and provides basic information about each
 	// option such as the owner and availability.
 	Engines(ctx context.Context) (*EnginesResponse, error)
 
-	// Engine retrieves an engine instance, providing basic information about the engine such
+	// Deprecated: Engine retrieves an engine instance, providing basic information about the engine such
 	// as the owner and availability.
 	Engine(ctx context.Context, engine string) (*EngineObject, error)
+
+	// Models lists the currently available models, and provides basic information about each
+	// option such as the owner and availability.
+	Models(ctx context.Context) (*ModelsResponse, error)
+
+	// Model retrieves a model instance, providing basic information about the model such
+	// as the owner and permissioning.
+	Model(ctx context.Context, model string) (*ModelObject, error)
 
 	// Completion creates a completion with the default engine. This is the main endpoint of the API
 	// which auto-completes based on the given prompt.
@@ -77,10 +82,10 @@ type Client interface {
 	// multiple calls to onData.
 	CompletionStream(ctx context.Context, request CompletionRequest, onData func(*CompletionResponse)) error
 
-	// CompletionWithEngine is the same as Completion except allows overriding the default engine on the client
+	// CompletionWithEngine is the same as Completion except allows overriding the default engine on the client.
 	CompletionWithEngine(ctx context.Context, engine string, request CompletionRequest) (*CompletionResponse, error)
 
-	// CompletionStreamWithEngine is the same as CompletionStream except allows overriding the default engine on the client
+	// CompletionStreamWithEngine is the same as CompletionStream except allows overriding the default engine on the client.
 	CompletionStreamWithEngine(ctx context.Context, engine string, request CompletionRequest, onData func(*CompletionResponse)) error
 
 	// Given a prompt and an instruction, the model will return an edited version of the prompt.
@@ -92,8 +97,45 @@ type Client interface {
 	// SearchWithEngine performs a semantic search over a list of documents with the specified engine.
 	SearchWithEngine(ctx context.Context, engine string, request SearchRequest) (*SearchResponse, error)
 
-	// Returns an embedding using the provided request.
+	// Embeddings returns an embedding using the provided request.
 	Embeddings(ctx context.Context, request EmbeddingsRequest) (*EmbeddingsResponse, error)
+
+	// Files lists the files that belong to the user's organization.
+	Files(ctx context.Context) (*FilesResponse, error)
+
+	// UploadFile uploads a file that contains document(s) to be used across various endpoints.
+	UploadFile(ctx context.Context, request UploadFileRequest) (*FileObject, error)
+
+	// DeleteFile deletes a file from the user's organization.
+	DeleteFile(ctx context.Context, fileID string) (*DeleteFileResponse, error)
+
+	// File retrieves a file from the user's organization.
+	File(ctx context.Context, fileID string) (*FileObject, error)
+
+	// FileContent retrieves the content of a file from the user's organization
+	// and returns it as raw bytes.
+	FileContent(ctx context.Context, fileID string) ([]byte, error)
+
+	// CreateFineTune creates a job that fine-tunes a model on a dataset.
+	CreateFineTune(ctx context.Context, request CreateFineTuneRequest) (*FineTuneObject, error)
+
+	// FineTunes lists the fine-tuning jobs that belong to the user's organization.
+	FineTunes(ctx context.Context) (*FineTunesResponse, error)
+
+	// FineTune retrieves a fine-tuning job from the user's organization.
+	FineTune(ctx context.Context, request FineTuneRequest) (*FineTuneObject, error)
+
+	// CancelFineTune cancels a fine-tuning job from the user's organization.
+	CancelFineTune(ctx context.Context, request FineTuneRequest) (*FineTuneObject, error)
+
+	// FineTuneEvents lists the events that belong to a fine-tuning job.
+	FineTuneEvents(ctx context.Context, request FineTuneEventsRequest) (*FineTuneEventsResponse, error)
+
+	// FineTuneStreamEvents streams the events that belong to a fine-tuning job.
+	FineTuneStreamEvents(ctx context.Context, request FineTuneEventsRequest, onData func(*FineTuneEvent)) error
+
+	// DeleteFineTuneModel deletes a fine-tuned model from the user's organization.
+	DeleteFineTuneModel(ctx context.Context, request DeleteFineTuneModelRequest) (*DeleteFineTuneModelResponse, error)
 }
 
 type client struct {
@@ -125,6 +167,10 @@ func NewClient(apiKey string, options ...ClientOption) Client {
 	return c
 }
 
+// Deprecated: Engines lists the currently available engines, and provides basic information about each
+// option such as the owner and availability.
+//
+// Use Models instead
 func (c *client) Engines(ctx context.Context) (*EnginesResponse, error) {
 	req, err := c.newRequest(ctx, "GET", "/engines", nil)
 	if err != nil {
@@ -142,6 +188,10 @@ func (c *client) Engines(ctx context.Context) (*EnginesResponse, error) {
 	return output, nil
 }
 
+// Deprecated: Engine retrieves a single engine, providing basic information about the engine such
+// as the owner and availability.
+//
+// Use Model instead
 func (c *client) Engine(ctx context.Context, engine string) (*EngineObject, error) {
 	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/engines/%s", engine), nil)
 	if err != nil {
@@ -153,6 +203,44 @@ func (c *client) Engine(ctx context.Context, engine string) (*EngineObject, erro
 	}
 
 	output := new(EngineObject)
+	if err := getResponseObject(resp, output); err != nil {
+		return nil, err
+	}
+	return output, nil
+}
+
+// Models lists the currently available models, and provides basic information about each
+// option such as the owner and permissioning.
+func (c *client) Models(ctx context.Context) (*ModelsResponse, error) {
+	req, err := c.newRequest(ctx, "GET", "/models", nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.performRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	output := new(ModelsResponse)
+	if err := getResponseObject(resp, output); err != nil {
+		return nil, err
+	}
+	return output, nil
+}
+
+// Model retrieves a single model, providing basic information about the model such
+// as the owner and permissioning.
+func (c *client) Model(ctx context.Context, model string) (*ModelObject, error) {
+	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/models/%s", model), nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.performRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	output := new(ModelObject)
 	if err := getResponseObject(resp, output); err != nil {
 		return nil, err
 	}
@@ -264,6 +352,7 @@ func (c *client) SearchWithEngine(ctx context.Context, engine string, request Se
 	if err != nil {
 		return nil, err
 	}
+
 	output := new(SearchResponse)
 	if err := getResponseObject(resp, output); err != nil {
 		return nil, err
@@ -291,6 +380,265 @@ func (c *client) Embeddings(ctx context.Context, request EmbeddingsRequest) (*Em
 	return &output, nil
 }
 
+// Files lists the files that belong to the user's organization.
+//
+// See: https://beta.openai.com/docs/api-reference/files/list
+func (c *client) Files(ctx context.Context) (*FilesResponse, error) {
+	req, err := c.newRequest(ctx, "GET", "/files", nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.performRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	output := FilesResponse{}
+	if err := getResponseObject(resp, &output); err != nil {
+		return nil, err
+	}
+	return &output, nil
+}
+
+// UploadFile uploads a file that contains document(s) to be used across various endpoints.
+//
+// See: https://beta.openai.com/docs/api-reference/files/upload
+func (c *client) UploadFile(ctx context.Context, request UploadFileRequest) (*FileObject, error) {
+	req, err := c.newRequest(ctx, "POST", "/files", request)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.performRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	output := FileObject{}
+	if err := getResponseObject(resp, &output); err != nil {
+		return nil, err
+	}
+	return &output, nil
+}
+
+// DeleteFile deletes a file that contains document(s) to be used across various endpoints.
+//
+// See: https://beta.openai.com/docs/api-reference/files/delete
+func (c *client) DeleteFile(ctx context.Context, fileID string) (*DeleteFileResponse, error) {
+	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("/files/%s", fileID), nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.performRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	output := DeleteFileResponse{}
+	if err := getResponseObject(resp, &output); err != nil {
+		return nil, err
+	}
+	return &output, nil
+}
+
+// File retrieves a file that contains document(s) to be used across various endpoints.
+//
+// See: https://beta.openai.com/docs/api-reference/files/retrieve
+func (c *client) File(ctx context.Context, fileID string) (*FileObject, error) {
+	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/files/%s", fileID), nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.performRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	output := FileObject{}
+	if err := getResponseObject(resp, &output); err != nil {
+		return nil, err
+	}
+	return &output, nil
+}
+
+// FileContent retrieves the content of a file that contains document(s) to be used across various endpoints.
+//
+// See: https://beta.openai.com/docs/api-reference/files/retrieve-content
+func (c *client) FileContent(ctx context.Context, fileID string) ([]byte, error) {
+	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/files/%s/content", fileID), nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.performRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+	return ioutil.ReadAll(resp.Body)
+}
+
+// CreateFineTune creates a job that fine-tunes a model on a dataset.
+//
+// See: https://beta.openai.com/docs/api-reference/fine-tunes/create
+func (c *client) CreateFineTune(ctx context.Context, request CreateFineTuneRequest) (*FineTuneObject, error) {
+	req, err := c.newRequest(ctx, "POST", "/fine-tunes", request)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.performRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	output := FineTuneObject{}
+	if err := getResponseObject(resp, &output); err != nil {
+		return nil, err
+	}
+	return &output, nil
+}
+
+// FineTunes lists the fine-tuning jobs that belong to the user's organization.
+//
+// See: https://beta.openai.com/docs/api-reference/fine-tunes/list
+func (c *client) FineTunes(ctx context.Context) (*FineTunesResponse, error) {
+	req, err := c.newRequest(ctx, "GET", "/fine-tunes", nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.performRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	output := FineTunesResponse{}
+	if err := getResponseObject(resp, &output); err != nil {
+		return nil, err
+	}
+	return &output, nil
+}
+
+// FineTune retrieves a fine-tuning job from the user's organization.
+//
+// See: https://beta.openai.com/docs/api-reference/fine-tunes/retrieve
+func (c *client) FineTune(ctx context.Context, request FineTuneRequest) (*FineTuneObject, error) {
+	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/fine-tunes/%s", request.FineTuneID), nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.performRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	output := FineTuneObject{}
+	if err := getResponseObject(resp, &output); err != nil {
+		return nil, err
+	}
+	return &output, nil
+}
+
+// CancelFineTune cancels a fine-tuning job from the user's organization.
+//
+// See: https://beta.openai.com/docs/api-reference/fine-tunes/cancel
+func (c *client) CancelFineTune(ctx context.Context, request FineTuneRequest) (*FineTuneObject, error) {
+	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("/fine-tunes/%s/cancel", request.FineTuneID), nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.performRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	output := FineTuneObject{}
+	if err := getResponseObject(resp, &output); err != nil {
+		return nil, err
+	}
+	return &output, nil
+}
+
+// FineTuneEvents lists the events that belong to a fine-tuning job.
+//
+// See: https://beta.openai.com/docs/api-reference/fine-tunes/events
+func (c *client) FineTuneEvents(ctx context.Context, request FineTuneEventsRequest) (*FineTuneEventsResponse, error) {
+	request.Stream = false
+	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/fine-tunes/%s/events", request.FineTuneID), nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.performRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	output := FineTuneEventsResponse{}
+	if err := getResponseObject(resp, &output); err != nil {
+		return nil, err
+	}
+	return &output, nil
+}
+
+// FineTuneStreamEvents streams the events that belong to a fine-tuning job.
+//
+// See: https://beta.openai.com/docs/api-reference/fine-tunes/events
+func (c *client) FineTuneStreamEvents(ctx context.Context, request FineTuneEventsRequest, onData func(*FineTuneEvent)) error {
+	request.Stream = true
+	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/fine-tunes/%s/events", request.FineTuneID), nil)
+	if err != nil {
+		return err
+	}
+	resp, err := c.performRequest(req)
+	if err != nil {
+		return err
+	}
+
+	reader := bufio.NewReader(resp.Body)
+	defer resp.Body.Close()
+
+	for {
+		line, err := reader.ReadBytes('\n')
+		if err != nil {
+			return err
+		}
+
+		line = bytes.TrimSpace(line)
+		if !bytes.HasPrefix(line, dataPrefix) {
+			continue
+		}
+		line = bytes.TrimPrefix(line, dataPrefix)
+
+		if bytes.HasPrefix(line, doneSequence) {
+			break
+		}
+		output := new(FineTuneEvent)
+		if err := json.Unmarshal(line, output); err != nil {
+			return fmt.Errorf("invalid json stream data: %v", err)
+		}
+		onData(output)
+	}
+	return nil
+}
+
+// DeleteFineTuneModel deletes a fine-tuned model from the user's organization.
+//
+// See: https://beta.openai.com/docs/api-reference/fine-tunes/delete-model
+func (c *client) DeleteFineTuneModel(ctx context.Context, request DeleteFineTuneModelRequest) (*DeleteFineTuneModelResponse, error) {
+	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("/fine-tunes/%s/model", request.Model), nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.performRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	output := DeleteFineTuneModelResponse{}
+	if err := getResponseObject(resp, &output); err != nil {
+		return nil, err
+	}
+	return &output, nil
+}
+
 func (c *client) performRequest(req *http.Request) (*http.Response, error) {
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -311,6 +659,12 @@ func checkForSuccess(resp *http.Response) error {
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("failed to read from body: %w", err)
+	}
+	// If the url ends with /content then we need to return the raw bytes
+	//
+	// See: https://beta.openai.com/docs/api-reference/files/retrieve-content
+	if strings.HasSuffix(resp.Request.URL.Path, "/content") {
+		return nil
 	}
 	var result APIErrorResponse
 	if err := json.Unmarshal(data, &result); err != nil {
