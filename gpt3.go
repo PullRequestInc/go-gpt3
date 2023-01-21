@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -162,7 +163,10 @@ func NewClient(apiKey string, options ...ClientOption) Client {
 		idOrg:         "",
 	}
 	for _, o := range options {
-		o(c)
+		err := o(c)
+		if err != nil {
+			log.Fatalln(err)
+		}
 	}
 	return c
 }
@@ -644,13 +648,11 @@ func (c *client) performRequest(req *http.Request) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := checkForSuccess(resp); err != nil {
-		return nil, err
-	}
-	return resp, nil
+	return resp, checkForSuccess(resp)
 }
 
-// returns an error if this response includes an error.
+// checkForSuccess checks the response to see if it was successful. If it was
+// not successful, it returns the error that was returned by the API.
 func checkForSuccess(resp *http.Response) error {
 	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
 		return nil
@@ -661,7 +663,6 @@ func checkForSuccess(resp *http.Response) error {
 		return fmt.Errorf("failed to read from body: %w", err)
 	}
 	// If the url ends with /content then we need to return the raw bytes
-	//
 	// See: https://beta.openai.com/docs/api-reference/files/retrieve-content
 	if strings.HasSuffix(resp.Request.URL.Path, "/content") {
 		return nil
@@ -682,7 +683,8 @@ func checkForSuccess(resp *http.Response) error {
 
 func getResponseObject(rsp *http.Response, v interface{}) error {
 	defer rsp.Body.Close()
-	if err := json.NewDecoder(rsp.Body).Decode(v); err != nil {
+	decoder := json.NewDecoder(rsp.Body)
+	if err := decoder.Decode(v); err != nil {
 		return fmt.Errorf("invalid json response: %w", err)
 	}
 	return nil

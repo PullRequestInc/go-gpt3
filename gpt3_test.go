@@ -149,7 +149,7 @@ func TestResponses(t *testing.T) {
 			},
 			&gpt3.EnginesResponse{
 				Data: []gpt3.EngineObject{
-					gpt3.EngineObject{
+					{
 						ID:     "123",
 						Object: "list",
 						Owner:  "owner",
@@ -181,7 +181,7 @@ func TestResponses(t *testing.T) {
 				Created: 123456789,
 				Model:   "davinci-12",
 				Choices: []gpt3.CompletionResponseChoice{
-					gpt3.CompletionResponseChoice{
+					{
 						Text:         "output",
 						FinishReason: "stop",
 					},
@@ -208,7 +208,7 @@ func TestResponses(t *testing.T) {
 				Created: 123456789,
 				Model:   "davinci-12",
 				Choices: []gpt3.CompletionResponseChoice{
-					gpt3.CompletionResponseChoice{
+					{
 						Text:         "output",
 						FinishReason: "stop",
 					},
@@ -231,7 +231,7 @@ func TestResponses(t *testing.T) {
 			},
 			&gpt3.SearchResponse{
 				Data: []gpt3.SearchData{
-					gpt3.SearchData{
+					{
 						Document: 1,
 						Object:   "search_result",
 						Score:    40.312,
@@ -245,7 +245,7 @@ func TestResponses(t *testing.T) {
 			},
 			&gpt3.SearchResponse{
 				Data: []gpt3.SearchData{
-					gpt3.SearchData{
+					{
 						Document: 1,
 						Object:   "search_result",
 						Score:    40.312,

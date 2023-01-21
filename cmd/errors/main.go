@@ -11,7 +11,10 @@ import (
 )
 
 func main() {
-	godotenv.Load()
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	apiKey := os.Getenv("API_KEY")
 	if apiKey == "" {
