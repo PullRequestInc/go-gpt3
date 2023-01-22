@@ -10,7 +10,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -662,9 +661,10 @@ func checkForSuccess(resp *http.Response) error {
 	if err != nil {
 		return fmt.Errorf("failed to read from body: %w", err)
 	}
-	// If the url ends with /content then we need to return the raw bytes
+	// If the content-type is not json, then we can't decode it, so just return the
+	// response as is.
 	// See: https://beta.openai.com/docs/api-reference/files/retrieve-content
-	if strings.HasSuffix(resp.Request.URL.Path, "/content") {
+	if resp.Header.Get("Content-Type") != "application/json" {
 		return nil
 	}
 	var result APIErrorResponse
