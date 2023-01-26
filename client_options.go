@@ -11,7 +11,7 @@ type ClientOption func(*client) error
 // WithOrg is a client option that allows you to set the organization ID
 func WithOrg(id string) ClientOption {
 	return func(c *client) error {
-		c.OrgID = id
+		c.orgID = id
 		return nil
 	}
 }
@@ -19,7 +19,7 @@ func WithOrg(id string) ClientOption {
 // WithDefaultModel is a client option that allows you to override the default model of the client
 func WithDefaultModel(model string) ClientOption {
 	return func(c *client) error {
-		c.DefaultModel = model
+		c.defaultModel = model
 		return nil
 	}
 }
@@ -27,7 +27,7 @@ func WithDefaultModel(model string) ClientOption {
 // WithUserAgent is a client option that allows you to override the default user agent of the client
 func WithUserAgent(userAgent string) ClientOption {
 	return func(c *client) error {
-		c.UserAgent = userAgent
+		c.userAgent = userAgent
 		return nil
 	}
 }
@@ -36,7 +36,7 @@ func WithUserAgent(userAgent string) ClientOption {
 // The default base url is "https://api.openai.com/v1"
 func WithBaseURL(baseURL string) ClientOption {
 	return func(c *client) error {
-		c.BaseURL = baseURL
+		c.baseURL = baseURL
 		return nil
 	}
 }
@@ -44,7 +44,7 @@ func WithBaseURL(baseURL string) ClientOption {
 // WithHTTPClient allows you to override the internal http.Client used
 func WithHTTPClient(httpClient *http.Client) ClientOption {
 	return func(c *client) error {
-		c.HttpClient = httpClient
+		c.httpClient = httpClient
 		return nil
 	}
 }
@@ -54,7 +54,7 @@ func WithHTTPClient(httpClient *http.Client) ClientOption {
 // the timeout there.
 func WithTimeout(timeout time.Duration) ClientOption {
 	return func(c *client) error {
-		c.HttpClient.Timeout = timeout
+		c.httpClient.Timeout = timeout
 		return nil
 	}
 }

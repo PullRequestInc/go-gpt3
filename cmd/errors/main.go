@@ -22,7 +22,10 @@ func main() {
 	}
 
 	ctx := context.Background()
-	client := gpt3.NewClient(apiKey)
+	client, err := gpt3.NewClient(apiKey)
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	resp, err := client.Completion(ctx, gpt3.CompletionRequest{
 		Prompt: []string{

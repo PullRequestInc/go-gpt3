@@ -159,8 +159,8 @@ func (c *client) FineTunes(ctx context.Context) (*FineTunesResponse, error) {
 // FineTune retrieves a fine-tuning job from the user's organization.
 //
 // See: https://beta.openai.com/docs/api-reference/fine-tunes/retrieve
-func (c *client) FineTune(ctx context.Context, request FineTuneRequest) (*FineTuneObject, error) {
-	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/fine-tunes/%s", request.FineTuneID), nil)
+func (c *client) FineTune(ctx context.Context, fineTuneID string) (*FineTuneObject, error) {
+	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/fine-tunes/%s", fineTuneID), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -179,8 +179,8 @@ func (c *client) FineTune(ctx context.Context, request FineTuneRequest) (*FineTu
 // CancelFineTune cancels a fine-tuning job from the user's organization.
 //
 // See: https://beta.openai.com/docs/api-reference/fine-tunes/cancel
-func (c *client) CancelFineTune(ctx context.Context, request FineTuneRequest) (*FineTuneObject, error) {
-	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("/fine-tunes/%s/cancel", request.FineTuneID), nil)
+func (c *client) CancelFineTune(ctx context.Context, fineTuneID string) (*FineTuneObject, error) {
+	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("/fine-tunes/%s/cancel", fineTuneID), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -246,7 +246,7 @@ func (c *client) FineTuneStreamEvents(ctx context.Context, request FineTuneEvent
 		}
 		line = bytes.TrimPrefix(line, dataPrefix)
 
-		if bytes.HasPrefix(line, doneSequence) {
+		if bytes.HasPrefix(line, streamTerminationPrefix) {
 			break
 		}
 		output := new(FineTuneEvent)
@@ -261,8 +261,8 @@ func (c *client) FineTuneStreamEvents(ctx context.Context, request FineTuneEvent
 // DeleteFineTuneModel deletes a fine-tuned model from the user's organization.
 //
 // See: https://beta.openai.com/docs/api-reference/fine-tunes/delete-model
-func (c *client) DeleteFineTuneModel(ctx context.Context, request DeleteFineTuneModelRequest) (*DeleteFineTuneModelResponse, error) {
-	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("/fine-tunes/%s/model", request.Model), nil)
+func (c *client) DeleteFineTuneModel(ctx context.Context, modelID string) (*DeleteFineTuneModelResponse, error) {
+	req, err := c.newRequest(ctx, "DELETE", fmt.Sprintf("/models/%s", modelID), nil)
 	if err != nil {
 		return nil, err
 	}

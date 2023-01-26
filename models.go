@@ -17,6 +17,7 @@ const (
 	BabbageModel        = "babbage"
 	CurieModel          = "curie"
 	DavinciModel        = "davinci"
+	DefaultModel        = DavinciModel
 )
 
 // ModelObject

@@ -1,6 +1,11 @@
 package gpt3
 
-import "context"
+import (
+	"bufio"
+	"bytes"
+	"context"
+	"encoding/json"
+)
 
 // CompletionRequest is a request for the completions API
 type CompletionRequest struct {
@@ -77,6 +82,10 @@ type CompletionResponseUsage struct {
 // Completion is a single completion.
 func (c *client) Completion(ctx context.Context, request CompletionRequest) (*CompletionResponse, error) {
 	request.Stream = false
+	// Check if the request provides a model
+	if request.Model == "" {
+		request.Model = c.defaultModel
+	}
 	req, err := c.newRequest(ctx, "POST", "/completions", request)
 	if err != nil {
 		return nil, err
@@ -91,4 +100,47 @@ func (c *client) Completion(ctx context.Context, request CompletionRequest) (*Co
 		return nil, err
 	}
 	return output, nil
+}
+
+func (c *client) CompletionStream(ctx context.Context, request CompletionRequest, onData func(*CompletionResponse)) error {
+	request.Stream = true
+	req, err := c.newRequest(ctx, "POST", "/completions", request)
+	if err != nil {
+		return err
+	}
+	resp, err := c.performRequest(req)
+	if err != nil {
+		return err
+	}
+
+	reader := bufio.NewReader(resp.Body)
+	defer resp.Body.Close()
+
+	for {
+		line, err := reader.ReadBytes('\n')
+		if err != nil {
+			return err
+		}
+
+		// Trim whitespace
+		line = bytes.TrimSpace(line)
+		// Check if the line has data
+		if !bytes.HasPrefix(line, dataPrefix) {
+			continue
+		}
+		// Trim the data prefix
+		line = bytes.TrimPrefix(line, dataPrefix)
+
+		// Check if the stream is terminated
+		if bytes.HasPrefix(line, streamTerminationPrefix) {
+			break
+		}
+
+		output := new(CompletionResponse)
+		if err := json.Unmarshal(line, output); err != nil {
+			return err
+		}
+		onData(output)
+	}
+	return nil
 }
