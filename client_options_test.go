@@ -8,39 +8,29 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestClientWithOrg(t *testing.T) {
-	client, err := gpt3.NewClient("test-key", gpt3.WithOrg("test-org"))
-	assert.Nil(t, err)
-	assert.NotNil(t, client)
-}
+func TestClient(t *testing.T) {
+	testCases := []struct {
+		name    string
+		options []gpt3.ClientOption
+	}{
+		{
+			name: "test-key",
+			options: []gpt3.ClientOption{
+				gpt3.WithOrg("test-org"),
+				gpt3.WithDefaultModel("test-model"),
+				gpt3.WithUserAgent("test-agent"),
+				gpt3.WithBaseURL("test-url"),
+				gpt3.WithHTTPClient(&http.Client{}),
+				gpt3.WithTimeout(10),
+			},
+		},
+	}
 
-func TestClientWithDefaultModel(t *testing.T) {
-	client, err := gpt3.NewClient("test-key", gpt3.WithDefaultModel("test-model"))
-	assert.Nil(t, err)
-	assert.NotNil(t, client)
-}
-
-func TestClientWithUserAgent(t *testing.T) {
-	client, err := gpt3.NewClient("test-key", gpt3.WithUserAgent("test-agent"))
-	assert.Nil(t, err)
-	assert.NotNil(t, client)
-}
-
-func TestClientWithBaseURL(t *testing.T) {
-	client, err := gpt3.NewClient("test-key", gpt3.WithBaseURL("test-url"))
-	assert.Nil(t, err)
-	assert.NotNil(t, client)
-}
-
-func TestClientWithHTTPClient(t *testing.T) {
-	httpClient := &http.Client{}
-	client, err := gpt3.NewClient("test-key", gpt3.WithHTTPClient(httpClient))
-	assert.Nil(t, err)
-	assert.NotNil(t, client)
-}
-
-func TestClientWithTimeout(t *testing.T) {
-	client, err := gpt3.NewClient("test-key", gpt3.WithTimeout(10))
-	assert.Nil(t, err)
-	assert.NotNil(t, client)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			client, err := gpt3.NewClient(tc.name, tc.options...)
+			assert.Nil(t, err)
+			assert.NotNil(t, client)
+		})
+	}
 }

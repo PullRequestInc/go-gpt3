@@ -91,10 +91,10 @@ type FineTuneObject struct {
 	UpdatedAt       int                 `json:"updated_at"`
 }
 
-// FineTunesResponse is the response from a list fine tunes request.
+// ListFineTunesResponse is the response from a list fine tunes request.
 //
 // See: https://beta.openai.com/docs/api-reference/fine-tunes/list
-type FineTunesResponse struct {
+type ListFineTunesResponse struct {
 	Data   []FineTuneObject `json:"data"`
 	Object string           `json:"object"`
 }
@@ -136,10 +136,10 @@ func (c *client) CreateFineTune(ctx context.Context, request CreateFineTuneReque
 	return &output, nil
 }
 
-// FineTunes lists the fine-tuning jobs that belong to the user's organization.
+// ListFineTunes lists the fine-tuning jobs that belong to the user's organization.
 //
 // See: https://beta.openai.com/docs/api-reference/fine-tunes/list
-func (c *client) FineTunes(ctx context.Context) (*FineTunesResponse, error) {
+func (c *client) ListFineTunes(ctx context.Context) (*ListFineTunesResponse, error) {
 	req, err := c.newRequest(ctx, "GET", "/fine-tunes", nil)
 	if err != nil {
 		return nil, err
@@ -149,7 +149,7 @@ func (c *client) FineTunes(ctx context.Context) (*FineTunesResponse, error) {
 		return nil, err
 	}
 
-	output := FineTunesResponse{}
+	output := ListFineTunesResponse{}
 	if err := getResponseObject(resp, &output); err != nil {
 		return nil, err
 	}

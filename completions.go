@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 )
 
 // CompletionRequest is a request for the completions API
@@ -104,6 +105,10 @@ func (c *client) Completion(ctx context.Context, request CompletionRequest) (*Co
 
 func (c *client) CompletionStream(ctx context.Context, request CompletionRequest, onData func(*CompletionResponse)) error {
 	request.Stream = true
+	// Check if the request provides a model
+	if request.Model == "" {
+		request.Model = c.defaultModel
+	}
 	req, err := c.newRequest(ctx, "POST", "/completions", request)
 	if err != nil {
 		return err
@@ -138,7 +143,7 @@ func (c *client) CompletionStream(ctx context.Context, request CompletionRequest
 
 		output := new(CompletionResponse)
 		if err := json.Unmarshal(line, output); err != nil {
-			return err
+			return fmt.Errorf("invalid json stream data: %v", err)
 		}
 		onData(output)
 	}

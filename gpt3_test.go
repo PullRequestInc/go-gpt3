@@ -111,9 +111,9 @@ func TestRequestCreationFails(t *testing.T) {
 			},
 			"Get \"https://api.openai.com/v1/files/file-id/content\": request error",
 		}, {
-			"FineTunes",
+			"ListFineTunes",
 			func() (interface{}, error) {
-				return client.FineTunes(ctx)
+				return client.ListFineTunes(ctx)
 			},
 			"Get \"https://api.openai.com/v1/fine-tunes\": request error",
 		}, {
@@ -313,11 +313,11 @@ func TestResponses(t *testing.T) {
 			},
 			nil,
 		}, {
-			"FineTunes",
+			"ListFineTunes",
 			func() (interface{}, error) {
-				return client.FineTunes(ctx)
+				return client.ListFineTunes(ctx)
 			},
-			&gpt3.FineTunesResponse{
+			&gpt3.ListFineTunesResponse{
 				Object: "list",
 				Data: []gpt3.FineTuneObject{
 					{

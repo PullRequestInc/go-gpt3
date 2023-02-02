@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"time"
 )
@@ -33,12 +32,16 @@ type Client interface {
 	File(ctx context.Context, fileID string) (*FileObject, error)
 	FileContent(ctx context.Context, fileID string) ([]byte, error)
 	CreateFineTune(ctx context.Context, request CreateFineTuneRequest) (*FineTuneObject, error)
-	FineTunes(ctx context.Context) (*FineTunesResponse, error)
+	ListFineTunes(ctx context.Context) (*ListFineTunesResponse, error)
 	FineTune(ctx context.Context, fineTuneID string) (*FineTuneObject, error)
 	CancelFineTune(ctx context.Context, fineTuneID string) (*FineTuneObject, error)
 	FineTuneEvents(ctx context.Context, request FineTuneEventsRequest) (*FineTuneEventsResponse, error)
 	FineTuneStreamEvents(ctx context.Context, request FineTuneEventsRequest, onData func(*FineTuneEvent)) error
 	DeleteFineTuneModel(ctx context.Context, modelID string) (*DeleteFineTuneModelResponse, error)
+
+	// Deprecated
+	CompletionWithEngine(ctx context.Context, engine string, request CompletionRequest) (*CompletionResponse, error)
+	CompletionStreamWithEngine(ctx context.Context, engine string, request CompletionRequest, onData func(*CompletionResponse)) error
 }
 
 type client struct {
@@ -93,6 +96,7 @@ func (c *client) performRequest(req *http.Request) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 	return resp, checkForSuccess(resp)
 }
 
@@ -100,8 +104,7 @@ func checkForSuccess(resp *http.Response) error {
 	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
 		return nil
 	}
-	defer resp.Body.Close()
-	data, err := ioutil.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("failed to read from body: %w", err)
 	}
@@ -129,6 +132,7 @@ func getResponseObject(rsp *http.Response, v interface{}) error {
 
 func jsonBodyReader(body interface{}) (io.Reader, error) {
 	if body == nil {
+		// the body is allowed to be nil so we return an empty buffer
 		return bytes.NewBuffer(nil), nil
 	}
 	raw, err := json.Marshal(body)
