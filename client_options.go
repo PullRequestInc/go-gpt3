@@ -8,18 +8,18 @@ import (
 // ClientOption are options that can be passed when creating a new client
 type ClientOption func(*client) error
 
-// WithOrg is a client option that allows you to override the organization ID
+// WithOrg is a client option that allows you to set the organization ID
 func WithOrg(id string) ClientOption {
 	return func(c *client) error {
-		c.idOrg = id
+		c.orgID = id
 		return nil
 	}
 }
 
-// WithDefaultEngine is a client option that allows you to override the default engine of the client
-func WithDefaultEngine(engine string) ClientOption {
+// WithDefaultModel is a client option that allows you to override the default model of the client
+func WithDefaultModel(model string) ClientOption {
 	return func(c *client) error {
-		c.defaultEngine = engine
+		c.defaultModel = model
 		return nil
 	}
 }

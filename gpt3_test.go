@@ -17,11 +17,6 @@ import (
 
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 net/http.RoundTripper
 
-func TestInitNewClient(t *testing.T) {
-	client := gpt3.NewClient("test-key")
-	assert.NotNil(t, client)
-}
-
 func fakeHttpClient() (*fakes.FakeRoundTripper, *http.Client) {
 	rt := &fakes.FakeRoundTripper{}
 	return rt, &http.Client{
@@ -32,7 +27,8 @@ func fakeHttpClient() (*fakes.FakeRoundTripper, *http.Client) {
 func TestRequestCreationFails(t *testing.T) {
 	ctx := context.Background()
 	rt, httpClient := fakeHttpClient()
-	client := gpt3.NewClient("test-key", gpt3.WithHTTPClient(httpClient))
+	client, err := gpt3.NewClient("test-key", gpt3.WithHTTPClient(httpClient))
+	assert.Nil(t, err)
 	rt.RoundTripReturns(nil, errors.New("request error"))
 
 	type testCase struct {
@@ -43,25 +39,25 @@ func TestRequestCreationFails(t *testing.T) {
 
 	testCases := []testCase{
 		{
-			"Engines",
+			"Models",
 			func() (interface{}, error) {
-				return client.Engines(ctx)
+				return client.Models(ctx)
 			},
-			"Get \"https://api.openai.com/v1/engines\": request error",
+			"Get \"https://api.openai.com/v1/models\": request error",
 		},
 		{
-			"Engine",
+			"Model",
 			func() (interface{}, error) {
-				return client.Engine(ctx, gpt3.DefaultEngine)
+				return client.Model(ctx, gpt3.DefaultModel)
 			},
-			"Get \"https://api.openai.com/v1/engines/davinci\": request error",
+			"Get \"https://api.openai.com/v1/models/davinci\": request error",
 		},
 		{
 			"Completion",
 			func() (interface{}, error) {
 				return client.Completion(ctx, gpt3.CompletionRequest{})
 			},
-			"Post \"https://api.openai.com/v1/engines/davinci/completions\": request error",
+			"Post \"https://api.openai.com/v1/completions\": request error",
 		}, {
 			"CompletionStream",
 			func() (interface{}, error) {
@@ -71,23 +67,7 @@ func TestRequestCreationFails(t *testing.T) {
 				}
 				return rsp, client.CompletionStream(ctx, gpt3.CompletionRequest{}, onData)
 			},
-			"Post \"https://api.openai.com/v1/engines/davinci/completions\": request error",
-		}, {
-			"CompletionWithEngine",
-			func() (interface{}, error) {
-				return client.CompletionWithEngine(ctx, gpt3.AdaEngine, gpt3.CompletionRequest{})
-			},
-			"Post \"https://api.openai.com/v1/engines/ada/completions\": request error",
-		}, {
-			"CompletionStreamWithEngine",
-			func() (interface{}, error) {
-				var rsp *gpt3.CompletionResponse
-				onData := func(data *gpt3.CompletionResponse) {
-					rsp = data
-				}
-				return rsp, client.CompletionStreamWithEngine(ctx, gpt3.AdaEngine, gpt3.CompletionRequest{}, onData)
-			},
-			"Post \"https://api.openai.com/v1/engines/ada/completions\": request error",
+			"Post \"https://api.openai.com/v1/completions\": request error",
 		}, {
 			"Edits",
 			func() (interface{}, error) {
@@ -95,23 +75,86 @@ func TestRequestCreationFails(t *testing.T) {
 			},
 			"Post \"https://api.openai.com/v1/edits\": request error",
 		}, {
-			"Search",
-			func() (interface{}, error) {
-				return client.Search(ctx, gpt3.SearchRequest{})
-			},
-			"Post \"https://api.openai.com/v1/engines/davinci/search\": request error",
-		}, {
-			"SearchWithEngine",
-			func() (interface{}, error) {
-				return client.SearchWithEngine(ctx, gpt3.AdaEngine, gpt3.SearchRequest{})
-			},
-			"Post \"https://api.openai.com/v1/engines/ada/search\": request error",
-		}, {
 			"Embeddings",
 			func() (interface{}, error) {
 				return client.Embeddings(ctx, gpt3.EmbeddingsRequest{})
 			},
 			"Post \"https://api.openai.com/v1/embeddings\": request error",
+		}, {
+			"Files",
+			func() (interface{}, error) {
+				return client.Files(ctx)
+			},
+			"Get \"https://api.openai.com/v1/files\": request error",
+		}, {
+			"UploadFile",
+			func() (interface{}, error) {
+				return client.UploadFile(ctx, gpt3.UploadFileRequest{})
+			},
+			"Post \"https://api.openai.com/v1/files\": request error",
+		}, {
+			"DeleteFile",
+			func() (interface{}, error) {
+				return client.DeleteFile(ctx, "file-id")
+			},
+			"Delete \"https://api.openai.com/v1/files/file-id\": request error",
+		}, {
+			"File",
+			func() (interface{}, error) {
+				return client.File(ctx, "file-id")
+			},
+			"Get \"https://api.openai.com/v1/files/file-id\": request error",
+		}, {
+			"FileContent",
+			func() (interface{}, error) {
+				return client.FileContent(ctx, "file-id")
+			},
+			"Get \"https://api.openai.com/v1/files/file-id/content\": request error",
+		}, {
+			"ListFineTunes",
+			func() (interface{}, error) {
+				return client.ListFineTunes(ctx)
+			},
+			"Get \"https://api.openai.com/v1/fine-tunes\": request error",
+		}, {
+			"FineTune",
+			func() (interface{}, error) {
+				return client.FineTune(ctx, "fine-tune-id")
+			},
+			"Get \"https://api.openai.com/v1/fine-tunes/fine-tune-id\": request error",
+		}, {
+			"CancelFineTune",
+			func() (interface{}, error) {
+				return client.CancelFineTune(ctx, "fine-tune-id")
+			},
+			"Post \"https://api.openai.com/v1/fine-tunes/fine-tune-id/cancel\": request error",
+		}, {
+			"FineTuneEvents",
+			func() (interface{}, error) {
+				return client.FineTuneEvents(ctx, gpt3.FineTuneEventsRequest{
+					FineTuneID: "fine-tune-id",
+				})
+			},
+			"Get \"https://api.openai.com/v1/fine-tunes/fine-tune-id/events\": request error",
+		},
+		{
+			"FineTuneStreamEvents",
+			func() (interface{}, error) {
+				var rsp *gpt3.FineTuneEvent
+				onData := func(data *gpt3.FineTuneEvent) {
+					rsp = data
+				}
+				return rsp, client.FineTuneStreamEvents(ctx, gpt3.FineTuneEventsRequest{
+					FineTuneID: "fine-tune-id",
+				}, onData)
+			},
+			"Get \"https://api.openai.com/v1/fine-tunes/fine-tune-id/events\": request error",
+		}, {
+			"DeleteFineTuneModel",
+			func() (interface{}, error) {
+				return client.DeleteFineTuneModel(ctx, "model-id")
+			},
+			"Delete \"https://api.openai.com/v1/models/model-id\": request error",
 		},
 	}
 
@@ -133,7 +176,8 @@ func (errReader) Read(p []byte) (n int, err error) {
 func TestResponses(t *testing.T) {
 	ctx := context.Background()
 	rt, httpClient := fakeHttpClient()
-	client := gpt3.NewClient("test-key", gpt3.WithHTTPClient(httpClient))
+	client, err := gpt3.NewClient("test-key", gpt3.WithHTTPClient(httpClient))
+	assert.Nil(t, err)
 
 	type testCase struct {
 		name           string
@@ -143,31 +187,31 @@ func TestResponses(t *testing.T) {
 
 	testCases := []testCase{
 		{
-			"Engines",
+			"Models",
 			func() (interface{}, error) {
-				return client.Engines(ctx)
+				return client.Models(ctx)
 			},
-			&gpt3.EnginesResponse{
-				Data: []gpt3.EngineObject{
-					gpt3.EngineObject{
-						ID:     "123",
-						Object: "list",
-						Owner:  "owner",
-						Ready:  true,
+			&gpt3.ModelsResponse{
+				Data: []gpt3.ModelObject{
+					{
+						ID:          "123",
+						Object:      "list",
+						OwnedBy:     "organization-owner",
+						Permissions: []string{},
 					},
 				},
 			},
 		},
 		{
-			"Engine",
+			"Model",
 			func() (interface{}, error) {
-				return client.Engine(ctx, gpt3.DefaultEngine)
+				return client.Model(ctx, gpt3.DefaultModel)
 			},
-			&gpt3.EngineObject{
-				ID:     "123",
-				Object: "list",
-				Owner:  "owner",
-				Ready:  true,
+			&gpt3.ModelObject{
+				ID:          "123",
+				Object:      "list",
+				OwnedBy:     "organization-owner",
+				Permissions: []string{},
 			},
 		},
 		{
@@ -181,7 +225,7 @@ func TestResponses(t *testing.T) {
 				Created: 123456789,
 				Model:   "davinci-12",
 				Choices: []gpt3.CompletionResponseChoice{
-					gpt3.CompletionResponseChoice{
+					{
 						Text:         "output",
 						FinishReason: "stop",
 					},
@@ -198,61 +242,6 @@ func TestResponses(t *testing.T) {
 			},
 			nil, // streaming responses are tested separately
 		}, {
-			"CompletionWithEngine",
-			func() (interface{}, error) {
-				return client.CompletionWithEngine(ctx, gpt3.AdaEngine, gpt3.CompletionRequest{})
-			},
-			&gpt3.CompletionResponse{
-				ID:      "123",
-				Object:  "list",
-				Created: 123456789,
-				Model:   "davinci-12",
-				Choices: []gpt3.CompletionResponseChoice{
-					gpt3.CompletionResponseChoice{
-						Text:         "output",
-						FinishReason: "stop",
-					},
-				},
-			},
-		}, {
-			"CompletionStreamWithEngine",
-			func() (interface{}, error) {
-				var rsp *gpt3.CompletionResponse
-				onData := func(data *gpt3.CompletionResponse) {
-					rsp = data
-				}
-				return rsp, client.CompletionStreamWithEngine(ctx, gpt3.AdaEngine, gpt3.CompletionRequest{}, onData)
-			},
-			nil, // streaming responses are tested separately
-		}, {
-			"Search",
-			func() (interface{}, error) {
-				return client.Search(ctx, gpt3.SearchRequest{})
-			},
-			&gpt3.SearchResponse{
-				Data: []gpt3.SearchData{
-					gpt3.SearchData{
-						Document: 1,
-						Object:   "search_result",
-						Score:    40.312,
-					},
-				},
-			},
-		}, {
-			"SearchWithEngine",
-			func() (interface{}, error) {
-				return client.SearchWithEngine(ctx, gpt3.AdaEngine, gpt3.SearchRequest{})
-			},
-			&gpt3.SearchResponse{
-				Data: []gpt3.SearchData{
-					gpt3.SearchData{
-						Document: 1,
-						Object:   "search_result",
-						Score:    40.312,
-					},
-				},
-			},
-		}, {
 			"Embeddings",
 			func() (interface{}, error) {
 				return client.Embeddings(ctx, gpt3.EmbeddingsRequest{})
@@ -268,6 +257,217 @@ func TestResponses(t *testing.T) {
 					PromptTokens: 1,
 					TotalTokens:  2,
 				},
+			},
+		}, {
+			"Files",
+			func() (interface{}, error) {
+				return client.Files(ctx)
+			},
+			&gpt3.FilesResponse{
+				Object: "list",
+				Data: []gpt3.FileObject{
+					{
+						ID:        "123",
+						Object:    "object",
+						Bytes:     123,
+						CreatedAt: 123456789,
+						Filename:  "file.txt",
+						Purpose:   "fine-tune",
+					},
+				},
+			},
+		}, {
+			"File",
+			func() (interface{}, error) {
+				return client.File(ctx, "file-id")
+			},
+			&gpt3.FileObject{
+				ID:        "123",
+				Object:    "object",
+				Bytes:     123,
+				CreatedAt: 123456789,
+				Filename:  "file.txt",
+				Purpose:   "fine-tune",
+			},
+		}, {
+			"UploadFile",
+			func() (interface{}, error) {
+				return client.UploadFile(ctx, gpt3.UploadFileRequest{
+					File:    "file.jsonl",
+					Purpose: "fine-tune",
+				})
+
+			},
+			&gpt3.FileObject{
+				ID:        "123",
+				Object:    "object",
+				Bytes:     123,
+				CreatedAt: 123456789,
+				Filename:  "file.txt",
+				Purpose:   "fine-tune",
+			},
+		}, {
+			"DeleteFile",
+			func() (interface{}, error) {
+				return client.DeleteFile(ctx, "file-id")
+			},
+			nil,
+		}, {
+			"ListFineTunes",
+			func() (interface{}, error) {
+				return client.ListFineTunes(ctx)
+			},
+			&gpt3.ListFineTunesResponse{
+				Object: "list",
+				Data: []gpt3.FineTuneObject{
+					{
+						ID:            "123",
+						Object:        "object",
+						Model:         "davinci-12",
+						CreatedAt:     123456789,
+						Events:        []gpt3.FineTuneEvent{},
+						FineTuneModel: "davince:ft:123",
+						Hyperparams: gpt3.FineTuneHyperparams{
+							BatchSize:              1,
+							LearningRateMultiplier: 1.0,
+							NEpochs:                1,
+							PromptLossWeight:       1.0,
+						},
+						OrganizationID: "org-id",
+						ResultFiles: []gpt3.FileObject{
+							{
+								ID:        "123",
+								Object:    "object",
+								Bytes:     123,
+								CreatedAt: 123456789,
+								Filename:  "file.txt",
+								Purpose:   "fine-tune",
+							},
+						},
+						Status: "complete",
+						ValidationFiles: []gpt3.FileObject{
+							{
+								ID:        "123",
+								Object:    "object",
+								Bytes:     123,
+								CreatedAt: 123456789,
+								Filename:  "file.txt",
+								Purpose:   "fine-tune",
+							},
+						},
+						TrainingFiles: []gpt3.FileObject{
+							{
+								ID:        "123",
+								Object:    "object",
+								Bytes:     123,
+								CreatedAt: 123456789,
+								Filename:  "file.txt",
+								Purpose:   "fine-tune",
+							},
+						},
+						UpdatedAt: 123456789,
+					},
+				},
+			},
+		}, {
+			"FineTune",
+			func() (interface{}, error) {
+				return client.FineTune(ctx, "fine-tune-id")
+			},
+			&gpt3.FineTuneObject{
+				ID:              "123",
+				Object:          "object",
+				Model:           "davinci-12",
+				CreatedAt:       123456789,
+				Events:          []gpt3.FineTuneEvent{},
+				FineTuneModel:   "davince:ft:123",
+				Hyperparams:     gpt3.FineTuneHyperparams{},
+				OrganizationID:  "org-id",
+				ResultFiles:     []gpt3.FileObject{},
+				Status:          "complete",
+				ValidationFiles: []gpt3.FileObject{},
+				TrainingFiles:   []gpt3.FileObject{},
+				UpdatedAt:       123456789,
+			},
+		}, {
+			"CreateFineTune",
+			func() (interface{}, error) {
+				return client.CreateFineTune(ctx, gpt3.CreateFineTuneRequest{})
+			},
+			&gpt3.FineTuneObject{
+				ID:              "123",
+				Object:          "object",
+				Model:           "davinci-12",
+				CreatedAt:       123456789,
+				Events:          []gpt3.FineTuneEvent{},
+				FineTuneModel:   "davince:ft:123",
+				Hyperparams:     gpt3.FineTuneHyperparams{},
+				OrganizationID:  "org-id",
+				ResultFiles:     []gpt3.FileObject{},
+				Status:          "complete",
+				ValidationFiles: []gpt3.FileObject{},
+				TrainingFiles:   []gpt3.FileObject{},
+				UpdatedAt:       123456789,
+			},
+		}, {
+			"CancelFineTune",
+			func() (interface{}, error) {
+				return client.CancelFineTune(ctx, "fine-tune-id")
+			},
+			&gpt3.FineTuneObject{
+				ID:              "123",
+				Object:          "object",
+				Model:           "davinci-12",
+				CreatedAt:       123456789,
+				Events:          []gpt3.FineTuneEvent{},
+				FineTuneModel:   "davince:ft:123",
+				Hyperparams:     gpt3.FineTuneHyperparams{},
+				OrganizationID:  "org-id",
+				ResultFiles:     []gpt3.FileObject{},
+				Status:          "complete",
+				ValidationFiles: []gpt3.FileObject{},
+				TrainingFiles:   []gpt3.FileObject{},
+				UpdatedAt:       123456789,
+			},
+		}, {
+			"FineTuneEvents",
+			func() (interface{}, error) {
+				return client.FineTuneEvents(ctx, gpt3.FineTuneEventsRequest{
+					FineTuneID: "fine-tune-id",
+				})
+			},
+			&gpt3.FineTuneEventsResponse{
+				Object: "list",
+				Data: []gpt3.FineTuneEvent{
+					{
+						Object:    "object",
+						CreatedAt: 123456789,
+						Level:     "info",
+						Message:   "message",
+					},
+				},
+			},
+		}, {
+			"FineTuneStreamEvents",
+			func() (interface{}, error) {
+				var events []gpt3.FineTuneEvent
+				onEvent := func(event *gpt3.FineTuneEvent) {
+					events = append(events, *event)
+				}
+				return nil, client.FineTuneStreamEvents(ctx, gpt3.FineTuneEventsRequest{
+					FineTuneID: "fine-tune-id",
+				}, onEvent)
+			},
+			nil,
+		}, {
+			"DeleteFineTuneModel",
+			func() (interface{}, error) {
+				return client.DeleteFineTuneModel(ctx, "model-id")
+			},
+			&gpt3.DeleteFineTuneModelResponse{
+				ID:      "model-id",
+				Object:  "object",
+				Deleted: true,
 			},
 		},
 	}
@@ -357,3 +557,4 @@ func TestResponses(t *testing.T) {
 }
 
 // TODO: add streaming response tests
+// TODO: add file content tests
