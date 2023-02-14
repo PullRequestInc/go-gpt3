@@ -35,9 +35,13 @@ type EnginesResponse struct {
 // CompletionRequest is a request for the completions API
 type CompletionRequest struct {
 	// A list of string prompts to use.
+	// ID of the model to use.
+	Model string `json:"model"`
 	// TODO there are other prompt types here for using token integers that we could add support for.
 	Prompt []string `json:"prompt"`
-	// How many tokens to complete up to. Max of 512
+	// The suffix that comes after a completion of inserted text.
+	Suffix string `json:"suffix,omitempty"`
+	// How many tokens to complete up to. Most models have a context length of 2048 tokens (except for the newest models, which support 4096).
 	MaxTokens *int `json:"max_tokens,omitempty"`
 	// Sampling temperature to use
 	Temperature *float32 `json:"temperature,omitempty"`
@@ -55,6 +59,13 @@ type CompletionRequest struct {
 	PresencePenalty float32 `json:"presence_penalty"`
 	// FrequencyPenalty number between 0 and 1 that penalizes tokens on existing frequency in the text so far.
 	FrequencyPenalty float32 `json:"frequency_penalty"`
+	// Generates best_of completions server-side and returns the "best" (the one with the highest log probability per token).
+	// Results cannot be streamed.
+	BestOf int `json:"best_of,omitempty"`
+	// Modify the likelihood of specified tokens appearing in the completion.
+	LogitBias map[string]int `json:"logit_bias,omitempty"`
+	// A unique identifier representing your end-user, which can help OpenAI to monitor and detect abuse
+	User string `json:"user,omitempty"`
 
 	// Whether to stream back results or not. Don't set this value in the request yourself
 	// as it will be overriden depending on if you use CompletionStream or Completion methods.

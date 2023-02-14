@@ -55,10 +55,6 @@ const (
 	defaultTimeoutSeconds = 30
 )
 
-func getEngineURL(engine string) string {
-	return fmt.Sprintf("%s/engines/%s/completions", defaultBaseURL, engine)
-}
-
 // A Client is an API client to communicate with the OpenAI gpt-3 APIs
 type Client interface {
 	// Engines lists the currently available engines, and provides basic information about each
@@ -125,6 +121,8 @@ func NewClient(apiKey string, options ...ClientOption) Client {
 	return c
 }
 
+// The Engines endpoints are deprecated.
+// Please use their replacement, Models, instead.
 func (c *client) Engines(ctx context.Context) (*EnginesResponse, error) {
 	req, err := c.newRequest(ctx, "GET", "/engines", nil)
 	if err != nil {
@@ -142,6 +140,8 @@ func (c *client) Engines(ctx context.Context) (*EnginesResponse, error) {
 	return output, nil
 }
 
+// The Engines endpoints are deprecated.
+// Please use their replacement, Models, instead.
 func (c *client) Engine(ctx context.Context, engine string) (*EngineObject, error) {
 	req, err := c.newRequest(ctx, "GET", fmt.Sprintf("/engines/%s", engine), nil)
 	if err != nil {
@@ -165,7 +165,7 @@ func (c *client) Completion(ctx context.Context, request CompletionRequest) (*Co
 
 func (c *client) CompletionWithEngine(ctx context.Context, engine string, request CompletionRequest) (*CompletionResponse, error) {
 	request.Stream = false
-	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("/engines/%s/completions", engine), request)
+	req, err := c.newRequest(ctx, "POST", "/completions", request)
 	if err != nil {
 		return nil, err
 	}
@@ -195,7 +195,7 @@ func (c *client) CompletionStreamWithEngine(
 	onData func(*CompletionResponse),
 ) error {
 	request.Stream = true
-	req, err := c.newRequest(ctx, "POST", fmt.Sprintf("/engines/%s/completions", engine), request)
+	req, err := c.newRequest(ctx, "POST", "/completions", request)
 	if err != nil {
 		return err
 	}
