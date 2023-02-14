@@ -61,7 +61,7 @@ func TestRequestCreationFails(t *testing.T) {
 			func() (interface{}, error) {
 				return client.Completion(ctx, gpt3.CompletionRequest{})
 			},
-			"Post \"https://api.openai.com/v1/engines/davinci/completions\": request error",
+			"Post \"https://api.openai.com/v1/completions\": request error",
 		}, {
 			"CompletionStream",
 			func() (interface{}, error) {
@@ -71,13 +71,13 @@ func TestRequestCreationFails(t *testing.T) {
 				}
 				return rsp, client.CompletionStream(ctx, gpt3.CompletionRequest{}, onData)
 			},
-			"Post \"https://api.openai.com/v1/engines/davinci/completions\": request error",
+			"Post \"https://api.openai.com/v1/completions\": request error",
 		}, {
 			"CompletionWithEngine",
 			func() (interface{}, error) {
 				return client.CompletionWithEngine(ctx, gpt3.AdaEngine, gpt3.CompletionRequest{})
 			},
-			"Post \"https://api.openai.com/v1/engines/ada/completions\": request error",
+			"Post \"https://api.openai.com/v1/completions\": request error",
 		}, {
 			"CompletionStreamWithEngine",
 			func() (interface{}, error) {
@@ -87,7 +87,7 @@ func TestRequestCreationFails(t *testing.T) {
 				}
 				return rsp, client.CompletionStreamWithEngine(ctx, gpt3.AdaEngine, gpt3.CompletionRequest{}, onData)
 			},
-			"Post \"https://api.openai.com/v1/engines/ada/completions\": request error",
+			"Post \"https://api.openai.com/v1/completions\": request error",
 		}, {
 			"Edits",
 			func() (interface{}, error) {
@@ -149,7 +149,7 @@ func TestResponses(t *testing.T) {
 			},
 			&gpt3.EnginesResponse{
 				Data: []gpt3.EngineObject{
-					gpt3.EngineObject{
+					{
 						ID:     "123",
 						Object: "list",
 						Owner:  "owner",
@@ -181,7 +181,7 @@ func TestResponses(t *testing.T) {
 				Created: 123456789,
 				Model:   "davinci-12",
 				Choices: []gpt3.CompletionResponseChoice{
-					gpt3.CompletionResponseChoice{
+					{
 						Text:         "output",
 						FinishReason: "stop",
 					},
@@ -208,7 +208,7 @@ func TestResponses(t *testing.T) {
 				Created: 123456789,
 				Model:   "davinci-12",
 				Choices: []gpt3.CompletionResponseChoice{
-					gpt3.CompletionResponseChoice{
+					{
 						Text:         "output",
 						FinishReason: "stop",
 					},
@@ -231,7 +231,7 @@ func TestResponses(t *testing.T) {
 			},
 			&gpt3.SearchResponse{
 				Data: []gpt3.SearchData{
-					gpt3.SearchData{
+					{
 						Document: 1,
 						Object:   "search_result",
 						Score:    40.312,
@@ -245,7 +245,7 @@ func TestResponses(t *testing.T) {
 			},
 			&gpt3.SearchResponse{
 				Data: []gpt3.SearchData{
-					gpt3.SearchData{
+					{
 						Document: 1,
 						Object:   "search_result",
 						Score:    40.312,
