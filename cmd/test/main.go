@@ -21,6 +21,24 @@ func main() {
 	ctx := context.Background()
 	client := gpt3.NewClient(apiKey)
 
+	chatResp, err := client.ChatCompletion(ctx, gpt3.ChatCompletionRequest{
+		Model: gpt3.GPT3Dot5Turbo,
+		Messages: []gpt3.ChatCompletionRequestMessage{
+			{
+				Role:    "system",
+				Content: "You are a poetry writing assistant",
+			},
+			{
+				Role:    "user",
+				Content: "Roses are red.\nViolets are",
+			},
+		},
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Printf("%+v\n", chatResp)
+
 	resp, err := client.Completion(ctx, gpt3.CompletionRequest{
 		Prompt: []string{
 			"1\n2\n3\n4",
