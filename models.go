@@ -163,6 +163,13 @@ type ChatCompletionResponseChoice struct {
 	Message      ChatCompletionResponseMessage `json:"message"`
 }
 
+// ChatCompletionResponseChoice is one of the choices returned in the response to the Chat Completions API
+type ChatCompletionStreamResponseChoice struct {
+	Index        int                           `json:"index"`
+	FinishReason string                        `json:"finish_reason"`
+	Delta        ChatCompletionResponseMessage `json:"delta"`
+}
+
 // ChatCompletionsResponseUsage is the object that returns how many tokens the completion's request used
 type ChatCompletionsResponseUsage struct {
 	PromptTokens     int `json:"prompt_tokens"`
@@ -178,6 +185,15 @@ type ChatCompletionResponse struct {
 	Model   string                         `json:"model"`
 	Choices []ChatCompletionResponseChoice `json:"choices"`
 	Usage   ChatCompletionsResponseUsage   `json:"usage"`
+}
+
+type ChatCompletionStreamResponse struct {
+	ID      string                               `json:"id"`
+	Object  string                               `json:"object"`
+	Created int                                  `json:"created"`
+	Model   string                               `json:"model"`
+	Choices []ChatCompletionStreamResponseChoice `json:"choices"`
+	Usage   ChatCompletionsResponseUsage         `json:"usage"`
 }
 
 // CompletionResponseChoice is one of the choices returned in the response to the Completions API
