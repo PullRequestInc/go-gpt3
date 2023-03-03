@@ -32,6 +32,24 @@ type EnginesResponse struct {
 	Object string         `json:"object"`
 }
 
+// ChatCompletionRequestMessage is a message to use as the context for the chat completion API
+type ChatCompletionRequestMessage struct {
+	// Role is the role is the role of the the message. Can be "system", "user", or "assistant"
+	Role string `json:"role"`
+
+	// Content is the content of the message
+	Content string `json:"content"`
+}
+
+// ChatCompletionRequest is a request for the chat completion API
+type ChatCompletionRequest struct {
+	// Model is the name of the model to use. If not specified, will default to gpt-3.5-turbo.
+	Model string `json:"model"`
+
+	// Messages is a list of messages to use as the context for the chat completion.
+	Messages []ChatCompletionRequestMessage `json:"messages"`
+}
+
 // CompletionRequest is a request for the completions API
 type CompletionRequest struct {
 	// A list of string prompts to use.
@@ -100,6 +118,36 @@ type LogprobResult struct {
 	TokenLogprobs []float32            `json:"token_logprobs"`
 	TopLogprobs   []map[string]float32 `json:"top_logprobs"`
 	TextOffset    []int                `json:"text_offset"`
+}
+
+// ChatCompletionResponseMessage is a message returned in the response to the Chat Completions API
+type ChatCompletionResponseMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+// ChatCompletionResponseChoice is one of the choices returned in the response to the Chat Completions API
+type ChatCompletionResponseChoice struct {
+	Index        int                           `json:"index"`
+	FinishReason string                        `json:"finish_reason"`
+	Message      ChatCompletionResponseMessage `json:"message"`
+}
+
+// ChatCompletionsResponseUsage is the object that returns how many tokens the completion's request used
+type ChatCompletionsResponseUsage struct {
+	PromptTokens     int `json:"prompt_tokens"`
+	CompletionTokens int `json:"completion_tokens"`
+	TotalTokens      int `json:"total_tokens"`
+}
+
+// ChatCompletionResponse is the full response from a request to the Chat Completions API
+type ChatCompletionResponse struct {
+	ID      string                         `json:"id"`
+	Object  string                         `json:"object"`
+	Created int                            `json:"created"`
+	Model   string                         `json:"model"`
+	Choices []ChatCompletionResponseChoice `json:"choices"`
+	Usage   ChatCompletionsResponseUsage   `json:"usage"`
 }
 
 // CompletionResponseChoice is one of the choices returned in the response to the Completions API

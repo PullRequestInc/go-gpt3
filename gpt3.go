@@ -30,6 +30,8 @@ const (
 type EmbeddingEngine string
 
 const (
+	GPT3Dot5Turbo             = "gpt-3.5-turbo"
+	GPT3Dot5Turbo0301         = "gpt-3.5-turbo-0301"
 	TextSimilarityAda001      = "text-similarity-ada-001"
 	TextSimilarityBabbage001  = "text-similarity-babbage-001"
 	TextSimilarityCurie001    = "text-similarity-curie-001"
@@ -68,6 +70,10 @@ type Client interface {
 	// Engine retrieves an engine instance, providing basic information about the engine such
 	// as the owner and availability.
 	Engine(ctx context.Context, engine string) (*EngineObject, error)
+
+	// ChatCompletion creates a completion with the Chat completion endpoint which
+	// is what powers the ChatGPT experience.
+	ChatCompletion(ctx context.Context, request ChatCompletionRequest) (*ChatCompletionResponse, error)
 
 	// Completion creates a completion with the default engine. This is the main endpoint of the API
 	// which auto-completes based on the given prompt.
@@ -159,6 +165,24 @@ func (c *client) Engine(ctx context.Context, engine string) (*EngineObject, erro
 	return output, nil
 }
 
+func (c *client) ChatCompletion(ctx context.Context, request ChatCompletionRequest) (*ChatCompletionResponse, error) {
+	req, err := c.newRequest(ctx, "POST", "/chat/completions", request)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := c.performRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	output := new(ChatCompletionResponse)
+	if err := getResponseObject(resp, output); err != nil {
+		return nil, err
+	}
+	return output, nil
+}
+
 func (c *client) Completion(ctx context.Context, request CompletionRequest) (*CompletionResponse, error) {
 	return c.CompletionWithEngine(ctx, c.defaultEngine, request)
 }
@@ -185,8 +209,10 @@ func (c *client) CompletionStream(ctx context.Context, request CompletionRequest
 	return c.CompletionStreamWithEngine(ctx, c.defaultEngine, request, onData)
 }
 
-var dataPrefix = []byte("data: ")
-var doneSequence = []byte("[DONE]")
+var (
+	dataPrefix   = []byte("data: ")
+	doneSequence = []byte("[DONE]")
+)
 
 func (c *client) CompletionStreamWithEngine(
 	ctx context.Context,

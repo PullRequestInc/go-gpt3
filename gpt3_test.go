@@ -57,12 +57,20 @@ func TestRequestCreationFails(t *testing.T) {
 			"Get \"https://api.openai.com/v1/engines/davinci\": request error",
 		},
 		{
+			"ChatCompletion",
+			func() (interface{}, error) {
+				return client.ChatCompletion(ctx, gpt3.ChatCompletionRequest{})
+			},
+			"Post \"https://api.openai.com/v1/chat/completions\": request error",
+		},
+		{
 			"Completion",
 			func() (interface{}, error) {
 				return client.Completion(ctx, gpt3.CompletionRequest{})
 			},
 			"Post \"https://api.openai.com/v1/engines/davinci/completions\": request error",
-		}, {
+		},
+		{
 			"CompletionStream",
 			func() (interface{}, error) {
 				var rsp *gpt3.CompletionResponse
@@ -72,13 +80,15 @@ func TestRequestCreationFails(t *testing.T) {
 				return rsp, client.CompletionStream(ctx, gpt3.CompletionRequest{}, onData)
 			},
 			"Post \"https://api.openai.com/v1/engines/davinci/completions\": request error",
-		}, {
+		},
+		{
 			"CompletionWithEngine",
 			func() (interface{}, error) {
 				return client.CompletionWithEngine(ctx, gpt3.AdaEngine, gpt3.CompletionRequest{})
 			},
 			"Post \"https://api.openai.com/v1/engines/ada/completions\": request error",
-		}, {
+		},
+		{
 			"CompletionStreamWithEngine",
 			func() (interface{}, error) {
 				var rsp *gpt3.CompletionResponse
@@ -88,25 +98,29 @@ func TestRequestCreationFails(t *testing.T) {
 				return rsp, client.CompletionStreamWithEngine(ctx, gpt3.AdaEngine, gpt3.CompletionRequest{}, onData)
 			},
 			"Post \"https://api.openai.com/v1/engines/ada/completions\": request error",
-		}, {
+		},
+		{
 			"Edits",
 			func() (interface{}, error) {
 				return client.Edits(ctx, gpt3.EditsRequest{})
 			},
 			"Post \"https://api.openai.com/v1/edits\": request error",
-		}, {
+		},
+		{
 			"Search",
 			func() (interface{}, error) {
 				return client.Search(ctx, gpt3.SearchRequest{})
 			},
 			"Post \"https://api.openai.com/v1/engines/davinci/search\": request error",
-		}, {
+		},
+		{
 			"SearchWithEngine",
 			func() (interface{}, error) {
 				return client.SearchWithEngine(ctx, gpt3.AdaEngine, gpt3.SearchRequest{})
 			},
 			"Post \"https://api.openai.com/v1/engines/ada/search\": request error",
-		}, {
+		},
+		{
 			"Embeddings",
 			func() (interface{}, error) {
 				return client.Embeddings(ctx, gpt3.EmbeddingsRequest{})
@@ -149,7 +163,7 @@ func TestResponses(t *testing.T) {
 			},
 			&gpt3.EnginesResponse{
 				Data: []gpt3.EngineObject{
-					gpt3.EngineObject{
+					{
 						ID:     "123",
 						Object: "list",
 						Owner:  "owner",
@@ -171,6 +185,30 @@ func TestResponses(t *testing.T) {
 			},
 		},
 		{
+			"ChatCompletion",
+			func() (interface{}, error) {
+				return client.ChatCompletion(ctx, gpt3.ChatCompletionRequest{})
+			},
+			&gpt3.ChatCompletionResponse{
+				ID:      "chatcmpl-123",
+				Object:  "messages",
+				Created: 123456789,
+				Model:   "gpt-3.5-turbo",
+				Choices: []gpt3.ChatCompletionResponseChoice{
+					{
+						Index:        0,
+						FinishReason: "stop",
+						Message: []gpt3.ChatCompletionResponseMessage{
+							{
+								Role:    "assistant",
+								Content: "output",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			"Completion",
 			func() (interface{}, error) {
 				return client.Completion(ctx, gpt3.CompletionRequest{})
@@ -181,13 +219,14 @@ func TestResponses(t *testing.T) {
 				Created: 123456789,
 				Model:   "davinci-12",
 				Choices: []gpt3.CompletionResponseChoice{
-					gpt3.CompletionResponseChoice{
+					{
 						Text:         "output",
 						FinishReason: "stop",
 					},
 				},
 			},
-		}, {
+		},
+		{
 			"CompletionStream",
 			func() (interface{}, error) {
 				var rsp *gpt3.CompletionResponse
@@ -197,7 +236,8 @@ func TestResponses(t *testing.T) {
 				return rsp, client.CompletionStream(ctx, gpt3.CompletionRequest{}, onData)
 			},
 			nil, // streaming responses are tested separately
-		}, {
+		},
+		{
 			"CompletionWithEngine",
 			func() (interface{}, error) {
 				return client.CompletionWithEngine(ctx, gpt3.AdaEngine, gpt3.CompletionRequest{})
@@ -208,13 +248,14 @@ func TestResponses(t *testing.T) {
 				Created: 123456789,
 				Model:   "davinci-12",
 				Choices: []gpt3.CompletionResponseChoice{
-					gpt3.CompletionResponseChoice{
+					{
 						Text:         "output",
 						FinishReason: "stop",
 					},
 				},
 			},
-		}, {
+		},
+		{
 			"CompletionStreamWithEngine",
 			func() (interface{}, error) {
 				var rsp *gpt3.CompletionResponse
@@ -224,35 +265,38 @@ func TestResponses(t *testing.T) {
 				return rsp, client.CompletionStreamWithEngine(ctx, gpt3.AdaEngine, gpt3.CompletionRequest{}, onData)
 			},
 			nil, // streaming responses are tested separately
-		}, {
+		},
+		{
 			"Search",
 			func() (interface{}, error) {
 				return client.Search(ctx, gpt3.SearchRequest{})
 			},
 			&gpt3.SearchResponse{
 				Data: []gpt3.SearchData{
-					gpt3.SearchData{
+					{
 						Document: 1,
 						Object:   "search_result",
 						Score:    40.312,
 					},
 				},
 			},
-		}, {
+		},
+		{
 			"SearchWithEngine",
 			func() (interface{}, error) {
 				return client.SearchWithEngine(ctx, gpt3.AdaEngine, gpt3.SearchRequest{})
 			},
 			&gpt3.SearchResponse{
 				Data: []gpt3.SearchData{
-					gpt3.SearchData{
+					{
 						Document: 1,
 						Object:   "search_result",
 						Score:    40.312,
 					},
 				},
 			},
-		}, {
+		},
+		{
 			"Embeddings",
 			func() (interface{}, error) {
 				return client.Embeddings(ctx, gpt3.EmbeddingsRequest{})
