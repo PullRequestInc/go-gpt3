@@ -48,6 +48,36 @@ type ChatCompletionRequest struct {
 
 	// Messages is a list of messages to use as the context for the chat completion.
 	Messages []ChatCompletionRequestMessage `json:"messages"`
+
+	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic
+	Temperature float32 `json:"temperature,omitempty"`
+
+	// An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.
+	TopP float32 `json:"top_p,omitempty"`
+
+	// Number of responses to generate
+	N int `json:"n,omitempty"`
+
+	// Whether or not to stream responses back as they are generated
+	Stream bool `json:"stream,omitempty"`
+
+	// Up to 4 sequences where the API will stop generating further tokens.
+	Stop []string `json:"stop,omitempty"`
+
+	// MaxTokens is the maximum number of tokens to return.
+	MaxTokens int `json:"max_tokens,omitempty"`
+
+	// (-2, 2) Penalize tokens that haven't appeared yet in the history.
+	PresencePenalty float32 `json:"presence_penalty,omitempty"`
+
+	// (-2, 2) Penalize tokens that appear too frequently in the history.
+	FrequencyPenalty float32 `json:"frequency_penalty,omitempty"`
+
+	// Modify the probability of specific tokens appearing in the completion.
+	LogitBias map[string]float32 `json:"logit_bias,omitempty"`
+
+	// Can be used to identify an end-user
+	User string `json:"user,omitempty"`
 }
 
 // CompletionRequest is a request for the completions API
@@ -133,6 +163,13 @@ type ChatCompletionResponseChoice struct {
 	Message      ChatCompletionResponseMessage `json:"message"`
 }
 
+// ChatCompletionResponseChoice is one of the choices returned in the response to the Chat Completions API
+type ChatCompletionStreamResponseChoice struct {
+	Index        int                           `json:"index"`
+	FinishReason string                        `json:"finish_reason"`
+	Delta        ChatCompletionResponseMessage `json:"delta"`
+}
+
 // ChatCompletionsResponseUsage is the object that returns how many tokens the completion's request used
 type ChatCompletionsResponseUsage struct {
 	PromptTokens     int `json:"prompt_tokens"`
@@ -148,6 +185,15 @@ type ChatCompletionResponse struct {
 	Model   string                         `json:"model"`
 	Choices []ChatCompletionResponseChoice `json:"choices"`
 	Usage   ChatCompletionsResponseUsage   `json:"usage"`
+}
+
+type ChatCompletionStreamResponse struct {
+	ID      string                               `json:"id"`
+	Object  string                               `json:"object"`
+	Created int                                  `json:"created"`
+	Model   string                               `json:"model"`
+	Choices []ChatCompletionStreamResponseChoice `json:"choices"`
+	Usage   ChatCompletionsResponseUsage         `json:"usage"`
 }
 
 // CompletionResponseChoice is one of the choices returned in the response to the Completions API
