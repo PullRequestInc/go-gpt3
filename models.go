@@ -50,13 +50,13 @@ type ChatCompletionRequest struct {
 	Messages []ChatCompletionRequestMessage `json:"messages"`
 
 	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic
-	Temperature float32 `json:"temperature,omitempty"`
+	Temperature *float32 `json:"temperature,omitempty"`
 
 	// An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.
-	TopP float32 `json:"top_p,omitempty"`
+	TopP *float32 `json:"top_p,omitempty"`
 
 	// Number of responses to generate
-	N int `json:"n,omitempty"`
+	N *int `json:"n,omitempty"`
 
 	// Whether or not to stream responses back as they are generated
 	Stream bool `json:"stream,omitempty"`
@@ -68,10 +68,10 @@ type ChatCompletionRequest struct {
 	MaxTokens int `json:"max_tokens,omitempty"`
 
 	// (-2, 2) Penalize tokens that haven't appeared yet in the history.
-	PresencePenalty float32 `json:"presence_penalty,omitempty"`
+	PresencePenalty *float32 `json:"presence_penalty,omitempty"`
 
 	// (-2, 2) Penalize tokens that appear too frequently in the history.
-	FrequencyPenalty float32 `json:"frequency_penalty,omitempty"`
+	FrequencyPenalty *float32 `json:"frequency_penalty,omitempty"`
 
 	// Modify the probability of specific tokens appearing in the completion.
 	LogitBias map[string]float32 `json:"logit_bias,omitempty"`
