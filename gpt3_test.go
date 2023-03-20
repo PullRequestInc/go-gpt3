@@ -198,11 +198,9 @@ func TestResponses(t *testing.T) {
 					{
 						Index:        0,
 						FinishReason: "stop",
-						Message: []gpt3.ChatCompletionResponseMessage{
-							{
-								Role:    "assistant",
-								Content: "output",
-							},
+						Message: gpt3.ChatCompletionResponseMessage{
+							Role:    "assistant",
+							Content: "output",
 						},
 					},
 				},
