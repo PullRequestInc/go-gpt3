@@ -127,6 +127,13 @@ func TestRequestCreationFails(t *testing.T) {
 			},
 			"Post \"https://api.openai.com/v1/embeddings\": request error",
 		},
+		{
+			"Moderation",
+			func() (interface{}, error) {
+				return client.Moderation(ctx, gpt3.ModerationRequest{})
+			},
+			"Post \"https://api.openai.com/v1/moderations\": request error",
+		},
 	}
 
 	for _, tc := range testCases {
@@ -310,6 +317,37 @@ func TestResponses(t *testing.T) {
 					PromptTokens: 1,
 					TotalTokens:  2,
 				},
+			},
+		},
+		{
+			"Moderation",
+			func() (interface{}, error) {
+				return client.Moderation(ctx, gpt3.ModerationRequest{})
+			},
+			&gpt3.ModerationResponse{
+				ID:    "123",
+				Model: "text-moderation-001",
+				Results: []gpt3.ModerationResult{{
+					Flagged: false,
+					Categories: gpt3.ModerationCategoryResult{
+						Hate:            false,
+						HateThreatening: false,
+						SelfHarm:        false,
+						Sexual:          false,
+						SexualMinors:    false,
+						Violence:        false,
+						ViolenceGraphic: false,
+					},
+					CategoryScores: gpt3.ModerationCategoryScores{
+						Hate:            0.22714105248451233,
+						HateThreatening: 0.22714105248451233,
+						SelfHarm:        0.005232391878962517,
+						Sexual:          0.01407341007143259,
+						SexualMinors:    0.0038522258400917053,
+						Violence:        0.009223177433013916,
+						ViolenceGraphic: 0.036865197122097015,
+					},
+				}},
 			},
 		},
 	}
