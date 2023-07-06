@@ -214,6 +214,32 @@ func TestResponses(t *testing.T) {
 			},
 		},
 		{
+			"ChatCompletionWithFunctionCall",
+			func() (interface{}, error) {
+				return client.ChatCompletion(ctx, gpt3.ChatCompletionRequest{})
+			},
+			&gpt3.ChatCompletionResponse{
+				ID:      "chatcmpl-123",
+				Object:  "messages",
+				Created: 123456789,
+				Model:   "gpt-3.5-turbo-0613",
+				Choices: []gpt3.ChatCompletionResponseChoice{
+					{
+						Index:        0,
+						FinishReason: "function_call",
+						Message: gpt3.ChatCompletionResponseMessage{
+							Role:    "assistant",
+							Content: "",
+							FunctionCall: &gpt3.Function{
+								Name: "get_current_weather",
+								Arguments: `"{"location": "Boston, MA"}"`,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			"Completion",
 			func() (interface{}, error) {
 				return client.Completion(ctx, gpt3.CompletionRequest{})
