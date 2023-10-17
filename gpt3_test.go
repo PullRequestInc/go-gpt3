@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/PullRequestInc/go-gpt3"
 	fakes "github.com/PullRequestInc/go-gpt3/go-gpt3fakes"
@@ -231,7 +232,7 @@ func TestResponses(t *testing.T) {
 							Role:    "assistant",
 							Content: "",
 							FunctionCall: &gpt3.Function{
-								Name: "get_current_weather",
+								Name:      "get_current_weather",
 								Arguments: `"{"location": "Boston, MA"}"`,
 							},
 						},
@@ -460,6 +461,37 @@ func TestResponses(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestRateLimitHeaders(t *testing.T) {
+	/*
+		These values are taken directly from the documentation at https://platform.openai.com/docs/guides/rate-limits/overview
+
+		| FIELD | SAMPLE VALUE | DESCRIPTION |
+		| ---- | ---- | ---- |
+		| x-ratelimit-limit-requests | 60 | The maximum number of requests that are permitted before exhausting the rate limit. |
+		| x-ratelimit-limit-tokens | 150000 | The maximum number of tokens that are permitted before exhausting the rate limit. |
+		| x-ratelimit-remaining-requests | 59 | The remaining number of requests that are permitted before exhausting the rate limit. |
+		| x-ratelimit-remaining-tokens | 149984 | The remaining number of tokens that are permitted before exhausting the rate limit. |
+		| x-ratelimit-reset-requests | 1s | The time until the rate limit (based on requests) resets to its initial state. |
+		| x-ratelimit-reset-tokens | 6m0s | The time until the rate limit (based on tokens) resets to its initial state. |
+	*/
+
+	header := make(http.Header)
+	header.Add("x-ratelimit-limit-requests", "60")
+	header.Add("x-ratelimit-limit-tokens", "150000")
+	header.Add("x-ratelimit-remaining-requests", "59")
+	header.Add("x-ratelimit-remaining-tokens", "149984")
+	header.Add("x-ratelimit-reset-requests", "1s")
+	header.Add("x-ratelimit-reset-tokens", "6m0s")
+
+	rateLimitHeaders := gpt3.NewRateLimitHeadersFromResponse(&http.Response{Header: header})
+	assert.Equal(t, 60, rateLimitHeaders.LimitRequests)
+	assert.Equal(t, 150000, rateLimitHeaders.LimitTokens)
+	assert.Equal(t, 59, rateLimitHeaders.RemainingRequests)
+	assert.Equal(t, 149984, rateLimitHeaders.RemainingTokens)
+	assert.Equal(t, 1*time.Second, rateLimitHeaders.ResetRequests)
+	assert.Equal(t, 6*time.Minute, rateLimitHeaders.ResetTokens)
 }
 
 // TODO: add streaming response tests
