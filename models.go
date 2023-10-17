@@ -84,7 +84,7 @@ type ChatCompletionRequest struct {
 	Messages []ChatCompletionRequestMessage `json:"messages"`
 
 	// Functions is a list of functions the model may generate JSON inputs for.
-	Functions []ChatCompletionFunctions `json:"functions"`
+	Functions []ChatCompletionFunctions `json:"functions,omitempty"`
 
 	// What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic
 	Temperature *float32 `json:"temperature,omitempty"`
@@ -189,8 +189,8 @@ type LogprobResult struct {
 
 // ChatCompletionResponseMessage is a message returned in the response to the Chat Completions API
 type ChatCompletionResponseMessage struct {
-	Role         string   `json:"role"`
-	Content      string   `json:"content"`
+	Role         string    `json:"role"`
+	Content      string    `json:"content"`
 	FunctionCall *Function `json:"function_call,omitempty"`
 }
 
