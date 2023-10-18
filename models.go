@@ -1,9 +1,16 @@
 package gpt3
 
-import "fmt"
+import (
+	"fmt"
+	"net/http"
+	"strconv"
+	"time"
+)
 
 // APIError represents an error that occured on an API
 type APIError struct {
+	RateLimitHeaders RateLimitHeaders
+
 	StatusCode int    `json:"status_code"`
 	Message    string `json:"message"`
 	Type       string `json:"type"`
@@ -217,6 +224,8 @@ type ChatCompletionsResponseUsage struct {
 
 // ChatCompletionResponse is the full response from a request to the Chat Completions API
 type ChatCompletionResponse struct {
+	RateLimitHeaders RateLimitHeaders
+
 	ID      string                         `json:"id"`
 	Object  string                         `json:"object"`
 	Created int                            `json:"created"`
@@ -244,6 +253,8 @@ type CompletionResponseChoice struct {
 
 // CompletionResponse is the full response from a request to the completions API
 type CompletionResponse struct {
+	RateLimitHeaders RateLimitHeaders
+
 	ID      string                     `json:"id"`
 	Object  string                     `json:"object"`
 	Created int                        `json:"created"`
@@ -368,4 +379,56 @@ type ModerationResponse struct {
 	ID      string             `json:"id"`
 	Model   string             `json:"model"`
 	Results []ModerationResult `json:"results"`
+}
+
+// RateLimitHeaders contain the HTTP response headers indicating rate limiting status
+type RateLimitHeaders struct {
+	// x-ratelimit-limit-requests: The maximum number of requests that are permitted before exhausting the rate limit.
+	LimitRequests int
+
+	// x-ratelimit-limit-tokens: The maximum number of tokens that are permitted before exhausting the rate limit.
+	LimitTokens int
+
+	// x-ratelimit-remaining-requests: The remaining number of requests that are permitted before exhausting the rate limit.
+	RemainingRequests int
+
+	// x-ratelimit-remaining-tokens: The remaining number of tokens that are permitted before exhausting the rate limit.
+	RemainingTokens int
+
+	// x-ratelimit-reset-requests: The time until the rate limit (based on requests) resets to its initial state.
+	ResetRequests time.Duration
+
+	// x-ratelimit-reset-tokens: The time until the rate limit (based on tokens) resets to its initial state.
+	ResetTokens time.Duration
+}
+
+// NewRateLimitHeadersFromResponse does a best effort to parse the rate limit information included in response headers
+func NewRateLimitHeadersFromResponse(resp *http.Response) RateLimitHeaders {
+	rateLimitHeaders := RateLimitHeaders{}
+	headers := resp.Header
+	if limitRequests := headers.Get("X-Ratelimit-Limit-Requests"); limitRequests != "" {
+		rateLimitHeaders.LimitRequests, _ = strconv.Atoi(limitRequests)
+	}
+
+	if limitTokens := headers.Get("X-Ratelimit-Limit-Tokens"); limitTokens != "" {
+		rateLimitHeaders.LimitTokens, _ = strconv.Atoi(limitTokens)
+	}
+
+	if remainingRequests := headers.Get("X-Ratelimit-Remaining-Requests"); remainingRequests != "" {
+		rateLimitHeaders.RemainingRequests, _ = strconv.Atoi(remainingRequests)
+	}
+
+	if remainingTokens := headers.Get("X-Ratelimit-Remaining-Tokens"); remainingTokens != "" {
+		rateLimitHeaders.RemainingTokens, _ = strconv.Atoi(remainingTokens)
+	}
+
+	if resetRequests := headers.Get("X-Ratelimit-Reset-Requests"); resetRequests != "" {
+		rateLimitHeaders.ResetRequests, _ = time.ParseDuration(resetRequests)
+	}
+
+	if resetTokens := headers.Get("X-Ratelimit-Reset-Tokens"); resetTokens != "" {
+		rateLimitHeaders.ResetTokens, _ = time.ParseDuration(resetTokens)
+	}
+
+	return rateLimitHeaders
 }
