@@ -33,6 +33,7 @@ const (
 	GPT3Dot5Turbo             = "gpt-3.5-turbo"
 	GPT3Dot5Turbo0301         = "gpt-3.5-turbo-0301"
 	GPT3Dot5Turbo0613         = "gpt-3.5-turbo-0613"
+	GPT3Dot5TurboInstruct     = "gpt-3.5-turbo-instruct"
 	TextSimilarityAda001      = "text-similarity-ada-001"
 	TextSimilarityBabbage001  = "text-similarity-babbage-001"
 	TextSimilarityCurie001    = "text-similarity-curie-001"
