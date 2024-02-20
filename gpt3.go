@@ -14,17 +14,9 @@ import (
 
 // Engine Types
 const (
-	TextAda001Engine     = "text-ada-001"
-	TextBabbage001Engine = "text-babbage-001"
-	TextCurie001Engine   = "text-curie-001"
-	TextDavinci001Engine = "text-davinci-001"
-	TextDavinci002Engine = "text-davinci-002"
-	TextDavinci003Engine = "text-davinci-003"
-	AdaEngine            = "ada"
-	BabbageEngine        = "babbage"
-	CurieEngine          = "curie"
-	DavinciEngine        = "davinci"
-	DefaultEngine        = DavinciEngine
+	Baggage002Engine = "babbage-002"
+	Davinci002Engine = "davinci-002"
+	DefaultEngine    = Davinci002Engine
 )
 
 type EmbeddingEngine string
